@@ -62,10 +62,17 @@ Wow! that's a lot more movies than shows!
 Now let's see what are the top 10 most popular movies and show from imbd and tmdb
 ```{r}
 
-top_5_ratings = titles %>%
+top_10_movies <- titles %>% 
+  filter(type == "MOVIE") %>%
   arrange(desc(imdb_score)) %>%
   select(title, type, release_year, genres, ) %>%
-  head(5)
+  head(10)
+  
+top_10_shows <- titles %>% 
+  filter(type == "SHOW") %>%
+  arrange(desc(imdb_score)) %>%
+  select(title, type, release_year, genres, ) %>%
+  head(10)
 ```
 
 
