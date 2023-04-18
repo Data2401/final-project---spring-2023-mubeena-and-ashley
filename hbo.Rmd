@@ -1,15 +1,32 @@
 ---
 title: "HBO"
 author: "Ashley Wright & Mubeena Wahaj"
-output: html_document
 date: "2023-04-13"
+output: 
+  html_document: 
+    highlight: kate
+    toc: yes
+    toc_depth: 4
+    theme: journal
+    number_sections: yes
 ---
-fdfa
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+
+```{r}
+library(tidyverse) 
+
+```
+
+## Introduction
+
+Lights, camera, action! Today, we're going to take a deep dive into the world of HBO movies and TV shows. From the iconic dramas like The Sopranos and Game of Thrones to the latest releases, HBO has been providing quality content to its viewers for decades. But have you ever wondered how they make decisions about what shows to produce or which movies to acquire? That's where the fascinating world of HBO data comes into play. By analyzing audience trends, ratings, and viewer demographics, HBO can make informed decisions about what to offer to its loyal fans. So sit back, grab some popcorn, and get ready to explore the exciting world of HBO data.
+
+The data we've decided to work on is from kaggle, owned by Diego Enrique and here's the link
+<https://www.kaggle.com/datasets/dgoenrique/hbo-max-movies-and-tv-shows>
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
