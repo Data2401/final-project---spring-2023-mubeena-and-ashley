@@ -2,12 +2,8 @@
 title: "HBO"
 author: "Ashley Wright & Mubeena Wahaj"
 date: "2023-04-13"
-output:
-  revealjs::revealjs_presentation:
-    theme: black
-    transition: fade
-    slideNumber: true
-    height: 900
+output: slidy_presentation
+
 ---
 
 ```{r setup, include=FALSE}
@@ -15,29 +11,32 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 
-```{r echo=FALSE}
+```{r }
 library(tidyverse)
 library(ggplot2)
 library(shiny)
 library(dplyr)
 library(knitr)
 
+#install.packages("kableExtra")
+library(kableExtra)
+
 
 ```
 
-# Lights, camera, action!{ .small }
+## Lights, camera, action!
 
 ![](https://images.squarespace-cdn.com/content/v1/52adf1abe4b0dbce9d210136/1616077888683-9Y12NX95XXTK11IESZCE/HBO+Maz+-+JL+ZS+GIF.gif?format=1500w)<centered>
 
 Today, we're going to take a deep dive into the world of HBO movies and TV shows. From the iconic dramas like The Sopranos and Game of Thrones to the latest releases, HBO has been providing quality content to its viewers for decades. But have you ever wondered how they make decisions about what shows to produce or which movies to acquire? That's where the fascinating world of HBO data comes into play. By analyzing audience trends, ratings, and viewer demographics, HBO can make informed decisions about what to offer to its loyal fans. So sit back, grab some popcorn, and get ready to explore the exciting world of HBO data.
 
-## The data we've decided to work on is from kaggle, owned by Diego Enrique and here's the link
+The data we've decided to work on is from kaggle, owned by Diego Enrique and here's the link
 <https://www.kaggle.com/datasets/dgoenrique/hbo-max-movies-and-tv-shows>
 
 
+\newpage
 
-
-## Let us read our datas, shall we?
+Let us read our datas, shall we?
 
 ```{r cars}
 credits = read.csv("credits.csv", stringsAsFactors = FALSE)
@@ -55,13 +54,13 @@ here's our titles.csv
 ```{r}
 kable(head(credits),
       align = "c",
-      caption = "Sample table of titles data",
+      caption = "Sample table of credits data",
       format = "html")
 
-kable(head(titles),
-      align = "c",
-      caption = "Sample table of titles data",
-      format = "html")
+#kable(head(titles),
+ #     align = "c",
+  #    caption = "Sample table of titles data",
+   #   format = "html")
 
 ```
 
@@ -82,7 +81,110 @@ Firstly let's see how many movies and TV shows we are dealing with
 titles %>% 
   count(type)
 ```
+
 Wow! that's a lot more movies than shows!
+ But let's see it in a graph
+ 
+```{r}
+# Create a data frame with counts of movies and shows
+title_counts = data.frame(
+  type = c("MOVIE", "SHOW"),
+  Count = c(sum(titles$type == "MOVIE"), sum(titles$type == "SHOW"))
+)
+
+# Create the bar chart
+ggplot(title_counts, aes(x = type, y = Count, fill = type)) +
+  geom_bar(stat = "identity") +
+  ggtitle("Number of Movies and Shows") +
+  xlab("") +
+  ylab("Count")
+```
+
+And what's the distribution of genres do we have from both?
+```{r}
+#MOVIE_genre_data= titles %>% 
+#  separate_rows(genres, sep = ", ") %>% 
+#  group_by(type = "MOVIE",genres) %>% 
+#  summarize(Count = n()) %>% 
+#  ungroup()
+
+genre_counts <- titles %>%
+  mutate(genres = str_remove_all(genres, "'")) %>% 
+  mutate(genres = gsub("\\[", "", genres)) %>% 
+  mutate(genres = gsub("\\]", "", genres)) %>% 
+  separate_rows(genres, sep = ", ") %>%
+  group_by(genres, type) %>%
+  summarize(Count = n()) %>%
+  ungroup() %>%
+  arrange(desc(Count))
+
+# Create the bar chart
+ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
+  geom_bar(stat = "identity")  +
+  labs(x = "Genre", y = "Count", title = "Distribution of Genres") +
+  theme_minimal()
+
+
+```
+Looks like the type of genres are hard to read. Let's flip our coordinates
+```{r}
+# genre_counts <- titles %>%
+#   separate_rows(genres, sep = ", ") %>%
+#   group_by(genres) %>%
+#   summarize(Count = n()) %>%
+#   ungroup() %>%   #ungroup() function is used to remove the grouping structure from the data frame after performing the group by operation.In this case, after calculating the genre counts within each group using summarize(), we want to work with the data as a whole, not just within each genre group. So, ungroup() is used to remove the grouping structure and return the data to its original form,
+#   arrange(desc(Count))
+
+# Create the bar chart
+#ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count)) +
+#  geom_bar(stat = "identity", fill = "purple")  +
+#  coord_flip() +
+#  labs(x = "Genre", y = "Count", title = "Distribution of Genres", ) +
+#  theme_minimal()
+
+genre_counts <- titles %>%
+  mutate(genres = str_remove_all(genres, "'")) %>% 
+  mutate(genres = gsub("\\[", "", genres)) %>% 
+  mutate(genres = gsub("\\]", "", genres)) %>% 
+  separate_rows(genres, sep = ", ") %>%
+  group_by(genres, type) %>%
+  summarize(Count = n()) %>%
+  ungroup() %>%
+  arrange(desc(Count))
+
+# Create the bar chart
+ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
+  geom_bar(stat = "identity")  +
+  labs(x = "Genre", y = "Count", title = "Distribution of Genres") +
+  theme_minimal()+coord_flip()
+
+
+```
+
+Here are the number of shows available in Netflix as a function of time¶
+```{r}
+
+# titles$release_year <- as.Date(paste0(titles$release_year, "-01-01"))  
+# convert release_year to date format
+
+# titles$release_date <- as.Date(paste0("01-01-", titles$release_year), format = "%d-%m-%Y")
+
+# create type column
+
+#titles$type <- ifelse(titles$type == "SHOW", "MOVIE", "no")
+
+# count number of titles by year and type
+title_counts <- titles %>%
+  group_by(release_year, type) %>%
+  summarize(count = n())
+
+# plot number of titles by year and type
+ggplot(titles , aes(x = release_year, fill = type)) +
+  geom_bar() +
+  labs(x = "Release Year", y = "Number of Titles", title = "Number of Shows and Movies Available by Year") +
+  scale_fill_manual(values = c("SHOW" = "purple", "MOVIE" = "darkgrey")) +
+  theme(plot.title = element_text(hjust = 0.5)) 
+```
 
 
 
@@ -95,12 +197,14 @@ top_10_movies <- titles %>%
   arrange(desc(imdb_score)) %>%
   select(title, type, release_year, genres, ) %>%
   head(10)
+top_10_movies
   
 top_10_shows <- titles %>% 
   filter(type == "SHOW") %>%
   arrange(desc(imdb_score)) %>%
   select(title, type, release_year, genres, ) %>%
   head(10)
+top_10_shows
 ```
 
 
