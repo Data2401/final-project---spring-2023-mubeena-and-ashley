@@ -204,7 +204,87 @@ top_10_shows <- titles %>%
   arrange(desc(imdb_score)) %>%
   select(title, type, release_year, genres, ) %>%
   head(10)
+
+
+
+top_10_movies
 top_10_shows
+```
+
+You can see there is a wide range of movies and tv shows, especially what year they were released. I wonder what the newest and oldest movies are?
+
+```{r}
+oldest_movie <- titles %>%
+  filter(type == "MOVIE") %>%
+  arrange(release_year) %>%
+  select(title, type, release_year, genres) %>%
+  head(1)
+
+oldest_movie
+
+newest_movie <- titles %>%
+  filter(type == "MOVIE") %>%
+  arrange(desc(release_year)) %>%
+  select(title, type, release_year, genres) %>%
+  head(1)
+
+newest_movie
+
+oldest_show <- titles %>%
+  filter(type == "SHOW") %>%
+  arrange(release_year) %>%
+  select(title, type, release_year, genres) %>%
+  head(1)
+
+oldest_show
+
+newest_show <- titles %>%
+  filter(type == "SHOW") %>%
+  arrange(desc(release_year)) %>%
+  select(title, type, release_year, genres) %>%
+  head(1)
+
+newest_show
+```
+I definitely have not seen either of those movies, but everyone should know last of us because of tiktok.
+
+Now I am wondering what is the longest movie?
+
+```{r}
+shortest_movie <- titles %>%
+  filter(type == "MOVIE") %>%
+  arrange(runtime) %>%
+  select(title, type,runtime, release_year, genres) %>%
+  head(1)
+
+shortest_movie
+
+longest_movie <- titles %>%
+  filter(type == "MOVIE") %>%
+  arrange(desc(runtime)) %>%
+  select(title, type, runtime, release_year, genres) %>%
+  head(1)
+
+longest_movie
+
+shortest_show <- titles %>%
+  filter(type == "SHOW") %>%
+  arrange(runtime, seasons) %>%
+  select(title, type, runtime, seasons, release_year, genres) %>%
+  head(1)
+
+shortest_show
+
+longest_show <- titles %>%
+  filter(type == "SHOW") %>%
+  arrange(desc(runtime)) %>%
+  arrange(desc(seasons)) %>%
+  select(title, type, runtime, seasons, release_year, genres) %>%
+  head(1)
+
+longest_show
+
+
 ```
 
 
