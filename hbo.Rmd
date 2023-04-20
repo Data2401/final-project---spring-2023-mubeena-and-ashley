@@ -286,6 +286,31 @@ longest_show
 
 
 ```
+Now lets look at the credits data. 
+
+```{r}
+credits %>%
+  count(role)
+```
+Are any of these actors/directors in multiple projects? If so, who was in the most projects?
+
+```{r}
+project_count <- credits %>%
+  count(name)
+
+glimpse(project_count)
+
+most_projects <- credits %>% 
+  count(name) %>% 
+  slice_max(n)
+
+most_projects
+##Who is this person?
+
+credits %>% 
+  filter(name == "Grey DeLisle")
+
+```
 
 
 ## Including Plots
