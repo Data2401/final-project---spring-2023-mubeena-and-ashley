@@ -2,51 +2,79 @@
 title: "HBO"
 author: "Ashley Wright & Mubeena Wahaj"
 date: "2023-04-13"
-output: slidy_presentation
-mainfont: "Comic Sans"
+output:
+  revealjs::revealjs_presentation:
+    theme: black
+    transition: fade
+    slideNumber: true
+    height: 900
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 
-```{r}
+```{r echo=FALSE}
 library(tidyverse)
 library(ggplot2)
 library(shiny)
 library(dplyr)
+library(knitr)
+
 
 ```
 
-## Lights, camera, action!
+# Lights, camera, action!{ .small }
 
-![](https://images.squarespace-cdn.com/content/v1/52adf1abe4b0dbce9d210136/1616077888683-9Y12NX95XXTK11IESZCE/HBO+Maz+-+JL+ZS+GIF.gif?format=1500w){centered}
+![](https://images.squarespace-cdn.com/content/v1/52adf1abe4b0dbce9d210136/1616077888683-9Y12NX95XXTK11IESZCE/HBO+Maz+-+JL+ZS+GIF.gif?format=1500w)<centered>
 
 Today, we're going to take a deep dive into the world of HBO movies and TV shows. From the iconic dramas like The Sopranos and Game of Thrones to the latest releases, HBO has been providing quality content to its viewers for decades. But have you ever wondered how they make decisions about what shows to produce or which movies to acquire? That's where the fascinating world of HBO data comes into play. By analyzing audience trends, ratings, and viewer demographics, HBO can make informed decisions about what to offer to its loyal fans. So sit back, grab some popcorn, and get ready to explore the exciting world of HBO data.
 
-The data we've decided to work on is from kaggle, owned by Diego Enrique and here's the link
+## The data we've decided to work on is from kaggle, owned by Diego Enrique and here's the link
 <https://www.kaggle.com/datasets/dgoenrique/hbo-max-movies-and-tv-shows>
 
----
-\newpage
 
-Let us read our datas, shall we?
+
+
+## Let us read our datas, shall we?
 
 ```{r cars}
-credits <- read.csv("credits.csv", stringsAsFactors = FALSE)
+credits = read.csv("credits.csv", stringsAsFactors = FALSE)
 titles = read.csv("titles.csv", stringsAsFactors = FALSE)
 glimpse(credits)
 glimpse(titles)
 ```
+
+\newpage
 ![](https://64.media.tumblr.com/ff3857c574cbb539172b8595ea7e311d/b16055b0ef0c7b66-40/s540x810/d3c129db79f24c1bacba11a977f11a72d3a6a803.gif){width=35%}
 
 Whoops! let's make it a little more readable
 
+here's our titles.csv
 ```{r}
-head(credits)
-head(titles)
+kable(head(credits),
+      align = "c",
+      caption = "Sample table of titles data",
+      format = "html")
+
+kable(head(titles),
+      align = "c",
+      caption = "Sample table of titles data",
+      format = "html")
+
 ```
+
+And here's our titles.csv
+```{r}
+kable(head(titles),
+      align = "c",
+      caption = "Sample table of titles data",
+      format = "html")
+```
+
+
+
 
 Firstly let's see how many movies and TV shows we are dealing with
 
