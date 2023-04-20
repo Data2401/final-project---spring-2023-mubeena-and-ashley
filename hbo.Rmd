@@ -12,6 +12,9 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 ```{r }
+#install.packages("magick")
+
+library(magick)
 library(tidyverse)
 library(ggplot2)
 library(shiny)
@@ -287,13 +290,35 @@ longest_show
 
 ```
 
+---
 
-## Including Plots
+## Ever wonder if your most favourite genre happens to be the most popular genre on HBO?
+### Let's find out 
 
-You can also embed plots, for example:
+```{r}
+genre_popularity <- titles %>%
+  mutate(genres = str_remove_all(genres, "'")) %>% 
+  mutate(genres = gsub("\\[", "", genres)) %>% 
+  mutate(genres = gsub("\\]", "", genres)) %>% 
+  separate_rows(genres, sep = ", ") %>%
+  group_by(genres, type,tmdb_popularity,tmdb_score ) %>%
+  summarize(Count = n()) %>%
+  ungroup() %>%
+  arrange(desc(tmdb_popularity))
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+genre_popularity
+
+# Create the bar chart
+ggplot(genre_popularity, aes(x = reorder(genres, Count), y = tmdb_popularity, fill = type)) +
+  geom_bar(stat = "identity")  +
+  labs(x = "Genre", y = "tmdb_popularity", title = "Genres and its popularity") +
+  theme_light()+coord_flip()
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+---
+## Who would've know?!
+![](https://media.tenor.com/VjFrECdBOq8AAAAC/say-what-now-anchorman.gif)
+
+### Makes you wonder whether drama is popular mainly 
