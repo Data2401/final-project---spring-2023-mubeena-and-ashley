@@ -41,7 +41,7 @@ The data we've decided to work on is from kaggle, owned by Diego Enrique and her
 
 Let us read our datas, shall we?
 
-```{r cars}
+```{r }
 credits = read.csv("credits.csv", stringsAsFactors = FALSE)
 titles = read.csv("titles.csv", stringsAsFactors = FALSE)
 glimpse(credits)
@@ -49,6 +49,7 @@ glimpse(titles)
 ```
 
 \newpage
+---
 ![](https://64.media.tumblr.com/ff3857c574cbb539172b8595ea7e311d/b16055b0ef0c7b66-40/s540x810/d3c129db79f24c1bacba11a977f11a72d3a6a803.gif){width=35%}
 
 Whoops! let's make it a little more readable
