@@ -5,7 +5,7 @@ date: "2023-04-13"
 output: slidy_presentation
 
 ---
----
+
 
 ## Lights, camera, action!
 
@@ -15,68 +15,55 @@ Today, we're going to take a deep dive into the world of HBO movies and TV shows
 
 ---
 
-Packages Used
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
 
-
-
-```{r }
+## Installing packages
+```{r}
 #install.packages("magick")
-
-library(magick)
-library(tidyverse)
-library(ggplot2)
-library(shiny)
-library(dplyr)
-library(knitr)
-
 #install.packages("kableExtra")
+#install.packages("countrycode")
+
+
+library(countrycode)
+library(tidyverse)
+library(knitr)
 library(kableExtra)
+library(maps)
 
 #remember to put how each package is used
 ```
 
----
-About Our Data
+## About Our Data
 
 The data we've decided to work on is from kaggle and is owned by Diego Enrique and here's the link 
 <https://www.kaggle.com/datasets/dgoenrique/hbo-max-movies-and-tv-shows>
 
----
-Let us read our datas, shall we?
 
-```{r }
+### Let us read our datas, shall we?
+
+```{r echo = FALSE}
 credits = read.csv("credits.csv", stringsAsFactors = FALSE)
 titles = read.csv("titles.csv", stringsAsFactors = FALSE)
-glimpse(credits)
-glimpse(titles)
+
+
 ```
 
-\newpage
----
-![](https://64.media.tumblr.com/ff3857c574cbb539172b8595ea7e311d/b16055b0ef0c7b66-40/s540x810/d3c129db79f24c1bacba11a977f11a72d3a6a803.gif){width=35%}
 
-Whoops! let's make it a little more readable
 
-here's our titles.csv
-```{r}
+## We're using the kable and head function to show a part of the data sets we're working on but in an organized manner
+### Here's our credits.csv
+```{r echo = FALSE}
 kable(head(credits),
       align = "c",
       caption = "Sample table of credits data",
       format = "html")
 
-#kable(head(titles),
- #     align = "c",
-  #    caption = "Sample table of titles data",
-   #   format = "html")
-
 ```
 
-And here's our titles.csv
-```{r}
+### And here's our titles.csv
+```{r echo = FALSE}
 kable(head(titles),
       align = "c",
       caption = "Sample table of titles data",
@@ -84,19 +71,18 @@ kable(head(titles),
 ```
 
 
+## Firstly,let's see how many movies and TV shows we are dealing with
 
-
-Firstly let's see how many movies and TV shows we are dealing with
-
-```{r}
+```{r echo = FALSE}
 titles %>% 
   count(type)
+
 ```
 
 Wow! that's a lot more movies than shows!
  But let's see it in a graph
  
-```{r}
+```{r echo = FALSE}
 # Create a data frame with counts of movies and shows
 title_counts = data.frame(
   type = c("MOVIE", "SHOW"),
@@ -111,57 +97,23 @@ ggplot(title_counts, aes(x = type, y = Count, fill = type)) +
   ylab("Count")
 ```
 
-And what's the distribution of genres do we have from both?
-```{r}
-#MOVIE_genre_data= titles %>% 
-#  separate_rows(genres, sep = ", ") %>% 
-#  group_by(type = "MOVIE",genres) %>% 
-#  summarize(Count = n()) %>% 
-#  ungroup()
+
+## And what's the distribution of genres do we have from both?
+
+Lets see it in a bar graph
+
+```{r echo = FALSE}
 
 genre_counts <- titles %>%
   mutate(genres = str_remove_all(genres, "'")) %>% 
   mutate(genres = gsub("\\[", "", genres)) %>% 
   mutate(genres = gsub("\\]", "", genres)) %>% 
   separate_rows(genres, sep = ", ") %>%
-  group_by(genres, type) %>%
+  group_by(genres, type,age_certification) %>%
   summarize(Count = n()) %>%
   ungroup() %>%
   arrange(desc(Count))
 
-# Create the bar chart
-ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
-  geom_bar(stat = "identity")  +
-  labs(x = "Genre", y = "Count", title = "Distribution of Genres") +
-  theme_minimal()
-
-
-```
-Looks like the type of genres are hard to read. Let's flip our coordinates
-```{r}
-# genre_counts <- titles %>%
-#   separate_rows(genres, sep = ", ") %>%
-#   group_by(genres) %>%
-#   summarize(Count = n()) %>%
-#   ungroup() %>%   #ungroup() function is used to remove the grouping structure from the data frame after performing the group by operation.In this case, after calculating the genre counts within each group using summarize(), we want to work with the data as a whole, not just within each genre group. So, ungroup() is used to remove the grouping structure and return the data to its original form,
-#   arrange(desc(Count))
-
-# Create the bar chart
-#ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count)) +
-#  geom_bar(stat = "identity", fill = "purple")  +
-#  coord_flip() +
-#  labs(x = "Genre", y = "Count", title = "Distribution of Genres", ) +
-#  theme_minimal()
-
-genre_counts <- titles %>%
-  mutate(genres = str_remove_all(genres, "'")) %>% 
-  mutate(genres = gsub("\\[", "", genres)) %>% 
-  mutate(genres = gsub("\\]", "", genres)) %>% 
-  separate_rows(genres, sep = ", ") %>%
-  group_by(genres, type) %>%
-  summarize(Count = n()) %>%
-  ungroup() %>%
-  arrange(desc(Count))
 
 # Create the bar chart
 ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
@@ -172,22 +124,49 @@ ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
 
 ```
 
-Here are the number of shows available in Netflix as a function of time¶
+
+Here's the table of number of genres in descending order
 ```{r}
 
-# titles$release_year <- as.Date(paste0(titles$release_year, "-01-01"))  
-# convert release_year to date format
+kable(genre_counts, caption = "Number of movies and TV shows by genre")
+```
 
-# titles$release_date <- as.Date(paste0("01-01-", titles$release_year), format = "%d-%m-%Y")
+## Since we just finished oberserving the number of genres in our dataset
+Let us see if there's a correlation between age_restriction and genres
+```{r}
+## removing missing values
+titles = na.omit(titles)
 
-# create type column
 
-#titles$type <- ifelse(titles$type == "SHOW", "MOVIE", "no")
+## Cleaning our age certification column 
+#titles$age_certification = gsub( " .*", "", titles$age_certification)
 
-# count number of titles by year and type
+age_genre = genre_counts %>% 
+  group_by(age_certification,genres) %>% 
+  summarize(age_genre_count = n()) %>% 
+  ungroup ()
+
+## Plotting
+ggplot(age_genre,aes(x=age_certification , y=age_genre_count, fill = genres)) + geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Age Certification", y = "Number of Titles", title = "Age Certification and Genres") +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+  
+
+unique(titles$age_certification)
+
+```
+
+
+
+
+## Here are the number of shows available in HBO as a function of time
+```{r echo = FALSE}
 title_counts <- titles %>%
   group_by(release_year, type) %>%
   summarize(count = n())
+
 
 # plot number of titles by year and type
 ggplot(titles , aes(x = release_year, fill = type)) +
@@ -200,15 +179,25 @@ ggplot(titles , aes(x = release_year, fill = type)) +
 
 
 
-Now let's see what are the top 10 most popular movies and show from imbd and tmdb
-```{r}
+## Now let's see what are the top 10 most popular movies and show from imbd and tmdb
+### Here are HBO's top 10 movies
+```{r echo = FALSE}
 
 top_10_movies <- titles %>% 
   filter(type == "MOVIE") %>%
   arrange(desc(imdb_score)) %>%
-  select(title, type, release_year, genres, ) %>%
-  head(10)
-top_10_movies
+  select(title, type, release_year, genres, ) 
+  
+  kable(head(top_10_movies),
+      align = "c",
+      caption = "HBO's top 10 movies",
+      format = "html")
+      
+```
+
+### Ane here HBO's top 10 shows
+
+```{r}
   
 top_10_shows <- titles %>% 
   filter(type == "SHOW") %>%
@@ -216,15 +205,17 @@ top_10_shows <- titles %>%
   select(title, type, release_year, genres, ) %>%
   head(10)
 
+  kable(head(top_10_shows),
+      align = "c",
+      caption = "HBO's top 10 shows",
+      format = "html")
 
-
-top_10_movies
-top_10_shows
 ```
 
-You can see there is a wide range of movies and tv shows, especially what year they were released. I wonder what the newest and oldest movies are?
 
-```{r}
+## You can see there is a wide range of movies and tv shows, especially what year they were released. I wonder what the newest and oldest movies are?
+
+```{r , echo = FALSE}
 oldest_movie <- titles %>%
   filter(type == "MOVIE") %>%
   arrange(release_year) %>%
@@ -259,7 +250,8 @@ newest_show
 ```
 I definitely have not seen either of those movies, but everyone should know last of us because of tiktok.
 
-Now I am wondering what is the longest movie?
+
+## Now I am wondering what is the longest movie?
 
 ```{r}
 shortest_movie <- titles %>%
@@ -297,13 +289,17 @@ longest_show
 
 
 ```
-Now lets look at the credits data. 
+
+
+## Now lets look at the credits data. 
 
 ```{r}
 credits %>%
   count(role)
 ```
-Are any of these actors/directors in multiple projects? If so, who was in the most projects?
+
+
+## Are any of these actors/directors in multiple projects? If so, who was in the most projects?
 
 ```{r}
 project_count <- credits %>%
@@ -323,10 +319,50 @@ credits %>%
 
 ```
 
----
+
 
 ## Ever wonder if your most favourite genre happens to be the most popular genre on HBO?
 ### Let's find out 
+
+```{r ,  echo=FALSE}
+ui <- fluidPage(
+  selectInput(inputId = "type", 
+              label = "Select the content type:", 
+              choices = c("MOVIE", "SHOW"),
+              selected = "Movie"),
+  plotOutput(outputId = "popularity_plot")
+)
+
+# Define the server logic
+server <- function(input, output) {
+  
+  genre_filter <- reactive({
+    genre_popularity <- titles %>%
+      filter(type == input$type) %>%
+      mutate(genres = str_remove_all(genres, "'")) %>% 
+      mutate(genres = gsub("\\[", "", genres)) %>% 
+      mutate(genres = gsub("\\]", "", genres)) %>% 
+      separate_rows(genres, sep = ", ") %>%
+      group_by(genres, type,imdb_score, tmdb_popularity, tmdb_score) %>%
+      summarize(Count = n()) %>%
+      ungroup() %>%
+      arrange(desc(tmdb_popularity))
+    return(genre_popularity)
+  })
+  
+  output$popularity_plot <- renderPlot({
+    ggplot(genre_filter(), aes(x = reorder(genres, Count), y = tmdb_popularity, fill = type)) +
+      geom_bar(stat = "identity") +
+      labs(x = "Genre", y = "tmdb_popularity", title = "Genres and its popularity") +
+      theme_light() + coord_flip()
+  })
+}
+
+# Run the app
+shinyApp(ui = ui, server = server)
+```
+
+## Here's both those graphs combined
 
 ```{r}
 genre_popularity <- titles %>%
@@ -334,7 +370,7 @@ genre_popularity <- titles %>%
   mutate(genres = gsub("\\[", "", genres)) %>% 
   mutate(genres = gsub("\\]", "", genres)) %>% 
   separate_rows(genres, sep = ", ") %>%
-  group_by(genres, type,tmdb_popularity,tmdb_score ) %>%
+  group_by(genres, type,tmdb_popularity,tmdb_score, imdb_score ) %>%
   summarize(Count = n()) %>%
   ungroup() %>%
   arrange(desc(tmdb_popularity))
@@ -350,8 +386,122 @@ ggplot(genre_popularity, aes(x = reorder(genres, Count), y = tmdb_popularity, fi
 
 
 
----
 ## Who would've know?!
 ![](https://media.tenor.com/VjFrECdBOq8AAAAC/say-what-now-anchorman.gif)
 
-### Makes you wonder whether drama is popular mainly 
+## Let us look at the Number of movies and TV shows by country 
+
+
+```{r, echo=FALSE}
+
+countries <- titles %>%
+  mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
+  mutate(production_countries = gsub("\\[", "", production_countries)) %>% 
+  mutate(production_countries = gsub("\\]", "", production_countries)) %>% 
+  separate_rows(production_countries, sep = ", ") %>%
+  group_by(production_countries, type) %>%
+  summarize(total = n()) %>%
+  arrange(desc(total))
+
+# Removing rows that have country unknown
+countries = filter(countries, !is.na(production_countries) & production_countries != "") 
+
+# Creating a new column that represents the full country name of production countries
+countries$full_country_name <- countrycode(sourcevar = countries$production_countries, origin = "iso2c", destination= "country.name")
+
+# Renaming "United States" to "USA" to match with data in world_map
+countries <- countries %>% 
+  mutate(full_country_name = if_else(full_country_name == "United States", "USA", full_country_name))
+
+# We're going to try to show this data using a world map
+world_map = map_data("world")
+
+# Let's join our world map and our countries data
+world_map_data = full_join(world_map, countries, by = c("region" = "full_country_name"))
+
+# Define UI
+ui <- fluidPage(
+  titlePanel("Number of movies and TV shows by country"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("type", "Select type", choices = unique(countries$type), selected = "movie"),
+      sliderInput("total", "Select total", min = 0, max = 1824, value = c(0, 1000))
+    ),
+    mainPanel(
+      plotOutput("map")
+    )
+  )
+)
+
+# Define server
+server <- function(input, output) {
+  # Filter data based on user input
+  filtered_data <- reactive({
+    world_map_data %>%
+      filter(type == input$type, total >= input$total[1], total <= input$total[2])
+  })
+  
+  # Render map
+  output$map <- renderPlot({
+    ggplot(filtered_data(), aes(x = long, y = lat, group = group, fill = total)) +
+      geom_polygon() +
+      coord_equal() +
+      scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = "darkblue", midpoint = 900) +
+      labs(fill = "Count") +
+      theme_light()
+  })
+}
+
+# Run app
+shinyApp(ui, server)
+
+
+```
+
+Unfortunately, because HBO only got their movies and shows from 99 countries, there are some uncolored countries 
+
+```{r echo=FALSE}
+countries <- titles %>%
+  mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
+  mutate(production_countries = gsub("\\[", "", production_countries)) %>% 
+  mutate(production_countries = gsub("\\]", "", production_countries)) %>% 
+  separate_rows(production_countries, sep = ", ") %>%
+  group_by(production_countries, type) %>%
+  summarize(total = n()) %>%
+  arrange(desc(total))
+
+## Removing rows that has country unknown
+countries = filter(countries, !is.na(production_countries) & production_countries != "") 
+
+## Creating a new column that represents the full country name of production countries
+countries$full_country_name <- countrycode(sourcevar = countries$production_countries, origin = "iso2c", destination= "country.name")
+
+kable(countries,
+      align = "c",
+      caption = "Number of movies and TV shows by country",
+      format = "html")
+
+# Renaming "United States" to "USA" to match with data in world_map
+countries <- countries %>% 
+  mutate(full_country_name = if_else(full_country_name == "United States", "USA", full_country_name))
+
+## We're going to try to show this data using a world map
+world_map = map_data("world")
+  
+
+## Let's join our world map and our countries data
+world_map_data= full_join(world_map, countries, by = c("region" = "full_country_name"))
+
+## Plotting
+ggplot(world_map_data, aes(x = long, y = lat, group = group, fill = total)) +
+  geom_polygon() +
+  coord_equal() +
+  scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = "darkblue", midpoint = 900) +
+  labs(title = "Number of movies and TV shows by country", fill = "Count") + 
+  theme_bw()
+```
+
+
+
+
+
