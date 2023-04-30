@@ -7,6 +7,11 @@ output: slidy_presentation
 ---
 
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+
 ## Lights, camera, action!
 
 ![](https://images.squarespace-cdn.com/content/v1/52adf1abe4b0dbce9d210136/1616077888683-9Y12NX95XXTK11IESZCE/HBO+Maz+-+JL+ZS+GIF.gif?format=1500w)<centered>
@@ -14,6 +19,7 @@ output: slidy_presentation
 Today, we're going to take a deep dive into the world of HBO movies and TV shows. From the iconic dramas like The Sopranos and Game of Thrones to the latest releases. HBO has been providing quality content to its viewers for decades, but have you ever wondered how they make decisions about what shows to produce or which movies to acquire? That's where the fascinating world of HBO data comes into play. By analyzing audience trends, ratings, and viewer demographics, HBO can make informed decisions about what to offer to its loyal fans. So sit back, grab a snack, and get ready to explore the exciting world of HBO data.
 
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
@@ -27,7 +33,25 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 
 library(countrycode)
+
+
+
+
+
+#load magick to process images
+#load tidyverse to manipulate data
+#load ggplot2 for graphing
+#load shiny to...
+#load dplyer to manipulate data
+#load knitr for general-purpose literate programming
+#load kableExtra to add features to table
+
+library(magick)
 library(tidyverse)
+library(ggplot2)
+library(shiny)
+library(dplyr)
+
 library(knitr)
 library(kableExtra)
 library(maps)
@@ -35,10 +59,65 @@ library(maps)
 #remember to put how each package is used
 ```
 
+
+
+
 ## About Our Data
 
-The data we've decided to work on is from kaggle and is owned by Diego Enrique and here's the link 
+The data we've decided to work on is from kaggle and is owned by Diego Enrique and here's the link:
 <https://www.kaggle.com/datasets/dgoenrique/hbo-max-movies-and-tv-shows>
+
+
+# Titles data:
+15 variables, 3030 observations
+
+id: The title ID
+
+title: The name of the title
+
+show_type: Tv show or Movie
+
+description: A description of movie or tv show
+
+release_year: Year show/movie was released
+
+age_certification: The age rating of movie or show
+
+runtime: The length of the episode of show or movie in minutes
+
+genres: A list of genres
+
+production_countries: Countries that produced the show/movie
+
+seasons: Number of seasons IF it is a show
+
+imdb_id: The title ID on IMDB
+
+imdb_score: Score on IMDB
+
+imdb_votes: Votes on IMDB
+
+tmdb_popularity: Popularity on TMDB
+
+tmdb_score: Score on TMDB
+
+
+# Credits data:
+5 variables, 64879 observations
+
+person_ID: The person ID on JustWatch
+
+id: The title ID on JustWatch
+
+name: The name of actor or director
+
+character_name: The name of character played in movie/show
+
+role: ACTOR or DIRECTOR
+
+---
+
+Let us read our datas, shall we?
 
 
 ### Let us read our datas, shall we?
@@ -49,6 +128,11 @@ titles = read.csv("titles.csv", stringsAsFactors = FALSE)
 
 
 ```
+
+
+---
+
+![](https://64.media.tumblr.com/ff3857c574cbb539172b8595ea7e311d/b16055b0ef0c7b66-40/s540x810/d3c129db79f24c1bacba11a977f11a72d3a6a803.gif){width=35%}
 
 
 
@@ -62,8 +146,11 @@ kable(head(credits),
 
 ```
 
+
 ### And here's our titles.csv
 ```{r echo = FALSE}
+
+titles <- within(titles, rm(description))
 kable(head(titles),
       align = "c",
       caption = "Sample table of titles data",
@@ -71,7 +158,21 @@ kable(head(titles),
 ```
 
 
+
 ## Firstly,let's see how many movies and TV shows we are dealing with
+
+What if we try to combine these data sets?
+
+```{r}
+both_data <- inner_join(titles, credits, by = "id")
+
+kable(head(both_data),
+      align = "c",
+      caption = "Sample table of both data",
+      format = "html")
+```
+
+
 
 ```{r echo = FALSE}
 titles %>% 
@@ -80,7 +181,7 @@ titles %>%
 ```
 
 Wow! that's a lot more movies than shows!
- But let's see it in a graph
+ But let's see it visually
  
 ```{r echo = FALSE}
 # Create a data frame with counts of movies and shows
@@ -95,7 +196,9 @@ ggplot(title_counts, aes(x = type, y = Count, fill = type)) +
   ggtitle("Number of Movies and Shows") +
   xlab("") +
   ylab("Count")
+
 ```
+
 
 
 ## And what's the distribution of genres do we have from both?
@@ -103,6 +206,84 @@ ggplot(title_counts, aes(x = type, y = Count, fill = type)) +
 Lets see it in a bar graph
 
 ```{r echo = FALSE}
+
+# What is the range for our data?
+
+
+range(titles$release_year)
+
+```
+Out of curiosity, what are those titles?
+
+```{r}
+oldest_title <- titles %>%
+  filter(release_year == "1901")
+
+oldest_title
+
+newest_title <- titles %>%
+  filter(release_year == "2023")
+
+newest_title
+
+```
+
+Now let's see what are the top 10 most popular movies and show from imbd and tmdb
+
+```{r}
+
+top_10_movies <- titles %>% 
+  filter(type == "MOVIE") %>%
+  arrange(desc(imdb_score)) %>%
+  select(title, type, release_year, genres, ) %>%
+  head(10)
+top_10_movies
+  
+top_10_shows <- titles %>% 
+  filter(type == "SHOW") %>%
+  arrange(desc(imdb_score)) %>%
+  select(title, type, release_year, genres, ) %>%
+  head(10)
+
+
+
+top_10_movies
+top_10_shows
+```
+
+Now lets look at the credits data. 
+
+```{r}
+credits %>%
+  count(role)
+```
+Are any of these actors/directors in multiple projects? If so, who was in the most projects?
+
+```{r}
+project_count <- credits %>%
+  count(name)
+
+glimpse(project_count)
+
+most_projects <- credits %>% 
+  count(name) %>% 
+  slice_max(n)
+
+most_projects
+##Who is this person?
+
+credits %>% 
+  filter(name == "Grey DeLisle")
+
+```
+And what's the distribution of genres do we have from both?
+```{r}
+#MOVIE_genre_data= titles %>% 
+#  separate_rows(genres, sep = ", ") %>% 
+#  group_by(type = "MOVIE",genres) %>% 
+#  summarize(Count = n()) %>% 
+#  ungroup()
+
 
 genre_counts <- titles %>%
   mutate(genres = str_remove_all(genres, "'")) %>% 
@@ -175,6 +356,7 @@ ggplot(titles , aes(x = release_year, fill = type)) +
   scale_fill_manual(values = c("SHOW" = "purple", "MOVIE" = "darkgrey")) +
   theme(plot.title = element_text(hjust = 0.5)) 
 ```
+
 
 
 
@@ -318,6 +500,7 @@ credits %>%
   filter(name == "Grey DeLisle")
 
 ```
+
 
 
 
