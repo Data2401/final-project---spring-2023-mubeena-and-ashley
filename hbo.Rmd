@@ -24,7 +24,13 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 
 ```{r }
-#install.packages("magick")
+#load magick to process images
+#load tidyverse to manipulate data
+#load ggplot2 for graphing
+#load shiny to...
+#load dplyer to manipulate data
+#load knitr for general-purpose literate programming
+#load kableExtra to add features to table
 
 library(magick)
 library(tidyverse)
@@ -32,8 +38,6 @@ library(ggplot2)
 library(shiny)
 library(dplyr)
 library(knitr)
-
-#install.packages("kableExtra")
 library(kableExtra)
 
 #remember to put how each package is used
