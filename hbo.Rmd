@@ -1,9 +1,8 @@
 ---
 title: "HBO"
 author: "Ashley Wright & Mubeena Wahaj"
-date: "2023-04-13"
+date: "2022-05-02"
 output: slidy_presentation
-
 ---
 
 
@@ -18,27 +17,12 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 Today, we're going to take a deep dive into the world of HBO movies and TV shows. From the iconic dramas like The Sopranos and Game of Thrones to the latest releases. HBO has been providing quality content to its viewers for decades, but have you ever wondered how they make decisions about what shows to produce or which movies to acquire? That's where the fascinating world of HBO data comes into play. By analyzing audience trends, ratings, and viewer demographics, HBO can make informed decisions about what to offer to its loyal fans. So sit back, grab a snack, and get ready to explore the exciting world of HBO data.
 
----
 
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE)
-```
-
-## Installing packages
+### Installing packages
 ```{r}
-#install.packages("magick")
-#install.packages("kableExtra")
-#install.packages("countrycode")
-
-
-library(countrycode)
-
-
-
-
-
-#load magick to process images
+#install.packages("ggrepel")
+#install.packages("ggiraph") ## to use geom_tooltip
+#install.packages("ggiraphExtra")
 #load tidyverse to manipulate data
 #load ggplot2 for graphing
 #load shiny to...
@@ -46,29 +30,30 @@ library(countrycode)
 #load knitr for general-purpose literate programming
 #load kableExtra to add features to table
 
-library(magick)
+library(ggrepel) ## For using tooltip
+library(ggiraph)  ## For using geom_tooltip
+library(ggiraphExtra)
 library(tidyverse)
 library(ggplot2)
 library(shiny)
 library(dplyr)
-
+library(countrycode)
 library(knitr)
 library(kableExtra)
 library(maps)
 
-#remember to put how each package is used
 ```
 
 
 
 
-## About Our Data
+#### About Our Data
 
 The data we've decided to work on is from kaggle and is owned by Diego Enrique and here's the link:
 <https://www.kaggle.com/datasets/dgoenrique/hbo-max-movies-and-tv-shows>
 
 
-# Titles data:
+##### Titles data:
 15 variables, 3030 observations
 
 id: The title ID
@@ -102,7 +87,7 @@ tmdb_popularity: Popularity on TMDB
 tmdb_score: Score on TMDB
 
 
-# Credits data:
+##### Credits data:
 5 variables, 64879 observations
 
 person_ID: The person ID on JustWatch
@@ -115,28 +100,19 @@ character_name: The name of character played in movie/show
 
 role: ACTOR or DIRECTOR
 
----
-
-Let us read our datas, shall we?
-
-
-### Let us read our datas, shall we?
+## Let us read our datas, shall we?
 
 ```{r echo = FALSE}
+
 credits = read.csv("credits.csv", stringsAsFactors = FALSE)
 titles = read.csv("titles.csv", stringsAsFactors = FALSE)
 
-
+## stringsAsFactors = FALSE is used to prevent R from automatically converting character vectors to factors when creating a data frame
 ```
 
-
----
-
-![](https://64.media.tumblr.com/ff3857c574cbb539172b8595ea7e311d/b16055b0ef0c7b66-40/s540x810/d3c129db79f24c1bacba11a977f11a72d3a6a803.gif){width=35%}
+### We're using the kable and head function to show a part of the data sets we're working on but in an organized manner
 
 
-
-## We're using the kable and head function to show a part of the data sets we're working on but in an organized manner
 ### Here's our credits.csv
 ```{r echo = FALSE}
 kable(head(credits),
@@ -147,10 +123,13 @@ kable(head(credits),
 ```
 
 
+
+
 ### And here's our titles.csv
 ```{r echo = FALSE}
 
 titles <- within(titles, rm(description))
+
 kable(head(titles),
       align = "c",
       caption = "Sample table of titles data",
@@ -159,9 +138,7 @@ kable(head(titles),
 
 
 
-## Firstly,let's see how many movies and TV shows we are dealing with
-
-What if we try to combine these data sets?
+### What if we try to combine these data sets?
 
 ```{r}
 both_data <- inner_join(titles, credits, by = "id")
@@ -173,12 +150,18 @@ kable(head(both_data),
 ```
 
 
+## Let's begin by determining the number or movies and TV shows we are working with
 
 ```{r echo = FALSE}
 titles %>% 
-  count(type)
+  count(type) %>%  
+  kable(format = "markdown", col.names = c("Type", "Count")) %>% 
+  kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+
+## kable_styling() creates a nicely formatted table
 
 ```
+
 
 Wow! that's a lot more movies than shows!
  But let's see it visually
@@ -201,55 +184,104 @@ ggplot(title_counts, aes(x = type, y = Count, fill = type)) +
 
 
 
-## And what's the distribution of genres do we have from both?
+## What's the distribution of genres for both Shows and Movies in our dataset?
 
-Lets see it in a bar graph
-
-```{r echo = FALSE}
-
-# What is the range for our data?
-
-
-range(titles$release_year)
-
-```
-Out of curiosity, what are those titles?
-
-```{r}
-oldest_title <- titles %>%
-  filter(release_year == "1901")
-
-oldest_title
-
-newest_title <- titles %>%
-  filter(release_year == "2023")
-
-newest_title
-
-```
-
-Now let's see what are the top 10 most popular movies and show from imbd and tmdb
-
-```{r}
-
-top_10_movies <- titles %>% 
-  filter(type == "MOVIE") %>%
-  arrange(desc(imdb_score)) %>%
-  select(title, type, release_year, genres, ) %>%
-  head(10)
-top_10_movies
+```{r, echo=FALSE}
+genre_counts <- titles %>%
+  mutate(genres = str_remove_all(genres, "'")) %>%                             
+  mutate(genres = gsub("\\[", "", genres)) %>% 
+  mutate(genres = gsub("\\]", "", genres)) %>% 
+  separate_rows(genres, sep = ", ") %>%     
+  group_by(genres, type, age_certification) %>%                
+  summarize(Count = n()) %>%                  
+  ungroup() %>%                               
+  arrange(desc(Count)) %>%  
+  filter(genres != "")     ## This will remove any rows where the "genres" column is blank
   
-top_10_shows <- titles %>% 
-  filter(type == "SHOW") %>%
-  arrange(desc(imdb_score)) %>%
-  select(title, type, release_year, genres, ) %>%
-  head(10)
+
+## We did a lot of mutating because the genres in our titles.csv were grouped together and are inside [] 
+##  separate_rows splits the 'genres' column that are separated by commas
+##  groups the data by genres and type
+##  summarize counts the number of titles that belongs to genres and type
+##  ungroups() ungroups the grouping that was set up
+##  we set our data at descending order because we want it to display the most popular genres for movies and TV shows at the top
 
 
 
-top_10_movies
-top_10_shows
+# Creating the bar chart and set fill as 'type' so that it's easier to differentiate between shows and movies
+
+ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
+  geom_bar(stat = "identity")  +
+  labs(x = "Genre", y = "Count", title = "Distribution of Genres") +
+  theme_minimal()+coord_flip()   ## We flipped our coordinates so that the genre labels are easily readable  
+
+
+
 ```
+
+### Here's the table of number of genres in descending order
+```{r, echo=FALSE}
+
+kable(select(genre_counts, -age_certification), caption = "Number of movies and TV shows by genre")
+
+```
+
+## Since we just finished oberserving the number of genres in our dataset
+Let us see if there's a correlation between age_restriction and genres
+```{r, echo=FALSE}
+
+## Let's look at how many kinds of age certification are we dealing with
+  #kable(unique(titles$age_certification))
+
+## We didn't like the output taking up so much space so were creating a variable unique_age_certifications that contains the unique values of age_certification 
+## We then use paste() to concatenate unique_age_certifications but with each value separated by comma and space
+
+  ## age_certifications = na.omit(titles$age_certification)  
+#this code did not work because missing columns are empty strings and not represented as NA
+
+#lets try using nzchar() 
+age_certifications <- titles$age_certification[nzchar(titles$age_certification)]  ## nzchar() removes empty strings
+
+unique_age_certifications = unique(age_certifications)
+age_certifications_string = paste(unique_age_certifications, collapse = ", ")
+cat("Unique age certifications: ", age_certifications_string, "\n")   ##cat() helps print concatenated string with Unique age certifications: before our age_certifications_string
+
+genre_counts <- genre_counts %>% 
+  group_by(genres, type, age_certification) %>% 
+  summarize(age_genre_count = n()) %>% 
+  ungroup() %>% 
+  arrange(desc(age_genre_count)) %>% 
+  filter(genres != "" & nzchar(age_certification))
+
+
+## Plotting
+ggplot(genre_counts,aes(x=age_certification , y=age_genre_count, fill = genres)) + geom_histogram(stat = "identity", position = "dodge") +
+  labs(x = "Age Certification", y = "Number of Titles", title = "Age Certification and Genres") +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(nrow = 2, byrow = TRUE)) 
+  #facet_wrap(~genres, scales = "free_x")   ### BAD IDEA
+  
+
+```
+
+Well that did not work as expected. Let's see if a geom_tile graph does the job:
+
+```{r, echo=FALSE}
+
+ggplot(genre_counts, aes(x = age_certification, y = genres, fill = age_genre_count)) +
+  geom_tile(color= "white") +
+  labs(x = "Age Certification", y = "Genres", title = "Age Certification and Genres") +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  theme_grey()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  guides(fill = guide_colorbar(title = "Number of Titles", barwidth = 10, barheight = 0.5))
+```
+
+
+## Now let's see what are the top 10 most popular movies and show from imbd and tmdb
+
+
 
 Now lets look at the credits data. 
 
@@ -275,165 +307,210 @@ most_projects
 credits %>% 
   filter(name == "Grey DeLisle")
 
-```
-And what's the distribution of genres do we have from both?
-```{r}
-#MOVIE_genre_data= titles %>% 
-#  separate_rows(genres, sep = ", ") %>% 
-#  group_by(type = "MOVIE",genres) %>% 
-#  summarize(Count = n()) %>% 
-#  ungroup()
-
-
-genre_counts <- titles %>%
-  mutate(genres = str_remove_all(genres, "'")) %>% 
-  mutate(genres = gsub("\\[", "", genres)) %>% 
-  mutate(genres = gsub("\\]", "", genres)) %>% 
-  separate_rows(genres, sep = ", ") %>%
-  group_by(genres, type,age_certification) %>%
-  summarize(Count = n()) %>%
-  ungroup() %>%
-  arrange(desc(Count))
-
-
-# Create the bar chart
-ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
-  geom_bar(stat = "identity")  +
-  labs(x = "Genre", y = "Count", title = "Distribution of Genres") +
-  theme_minimal()+coord_flip()
-
-
-```
-
-
-Here's the table of number of genres in descending order
-```{r}
-
-kable(genre_counts, caption = "Number of movies and TV shows by genre")
-```
-
-## Since we just finished oberserving the number of genres in our dataset
-Let us see if there's a correlation between age_restriction and genres
-```{r}
-## removing missing values
-titles = na.omit(titles)
-
-
-## Cleaning our age certification column 
-#titles$age_certification = gsub( " .*", "", titles$age_certification)
-
-age_genre = genre_counts %>% 
-  group_by(age_certification,genres) %>% 
-  summarize(age_genre_count = n()) %>% 
-  ungroup ()
-
-## Plotting
-ggplot(age_genre,aes(x=age_certification , y=age_genre_count, fill = genres)) + geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "Age Certification", y = "Number of Titles", title = "Age Certification and Genres") +
-  theme_minimal() +
-  theme(legend.position = "bottom") +
-  guides(fill = guide_legend(nrow = 2, byrow = TRUE))
-  
-
-unique(titles$age_certification)
 
 ```
 
 
 
 
-## Here are the number of shows available in HBO as a function of time
+
+
+
+
+
 ```{r echo = FALSE}
-title_counts <- titles %>%
-  group_by(release_year, type) %>%
-  summarize(count = n())
 
+# What is the range for our data?
+range(titles$release_year)
+
+```
+
+## Here are the number of shows available in HBO by release year
+```{r echo = FALSE}
 
 # plot number of titles by year and type
 ggplot(titles , aes(x = release_year, fill = type)) +
-  geom_bar() +
+  geom_bar(color ="grey", size = .1) +
   labs(x = "Release Year", y = "Number of Titles", title = "Number of Shows and Movies Available by Year") +
-  scale_fill_manual(values = c("SHOW" = "purple", "MOVIE" = "darkgrey")) +
-  theme(plot.title = element_text(hjust = 0.5)) 
+  scale_fill_manual(values = c("SHOW" = "blue", "MOVIE" = "red")) +
+  scale_x_continuous(breaks = seq(1900, 2020, by = 10), labels = paste0(seq(1900, 2020, by = 10), "s")) +
+  theme(plot.title = element_text(hjust = 0.5))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+```
+Here's the summary table of what the graph shows
+
+```{r , echo =FALSE}
+## creating a new column in our titles.csv called decades: this will categorize what realease year as per their decades
+
+titles$decade = cut(titles$release_year, 
+                    breaks = c(seq(1899, 2019, 10), 2021), 
+                    labels = paste0(seq(1900, 2020, 10), "s"))
+
+summary_table = titles %>% 
+  group_by(decade,type) %>% 
+  summarise(count = n())
+
+
+kable(summary_table)
+
 ```
 
+This indicates us that HBO primarily features Movies and Shows from the decade of 2010s
+
+
+You can see there is a wide range of movies and tv shows, especially what year they were released. I wonder what the  oldest movies and shows are?
+
+```{r , echo = FALSE}
+
+## Oldest movie
+kable(head(titles %>%
+  filter(type == "MOVIE") %>%
+  arrange(release_year) %>%
+  select(title, release_year, genres) %>% 
+    head(1)),
+  align = "c",
+  caption = "Oldest Movie on HBO",
+  format = "html" )
+
+## Oldest show
+kable(head(titles %>%
+  filter(type == "SHOW") %>%
+  arrange(release_year) %>%
+  select(title, release_year, genres) %>% 
+    head(1)),
+  align = "c",
+  caption = "Oldest Show on HBO",
+  format = "html" )
 
 
 
+```
 
 ## Now let's see what are the top 10 most popular movies and show from imbd and tmdb
-### Here are HBO's top 10 movies
+
+### Here are HBO's top 10 movies and shows according to imdb score
 ```{r echo = FALSE}
 
 top_10_movies <- titles %>% 
   filter(type == "MOVIE") %>%
   arrange(desc(imdb_score)) %>%
-  select(title, type, release_year, genres, ) 
+  select(title,imdb_score, release_year, genres, ) 
   
-  kable(head(top_10_movies),
+  kable(head(top_10_movies,10),
       align = "c",
-      caption = "HBO's top 10 movies",
-      format = "html")
-      
-```
-
-### Ane here HBO's top 10 shows
-
-```{r}
+      caption = "<b><center>HBO's top 10 movies from imdb_score",
+      format = "html") %>% 
+    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
   
 top_10_shows <- titles %>% 
   filter(type == "SHOW") %>%
   arrange(desc(imdb_score)) %>%
-  select(title, type, release_year, genres, ) %>%
+  select(title, imdb_score, release_year, genres, ) %>%
   head(10)
 
-  kable(head(top_10_shows),
+  kable(head(top_10_shows,10),
       align = "c",
-      caption = "HBO's top 10 shows",
-      format = "html")
+      caption = "<b><center>HBO's top 10 shows from imdb_score",
+      format = "html") %>% 
+    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+      
+```
+
+### Here are HBO's top 10 movies and shows according to tmdb score
+```{r, results='asis', echo=FALSE}
+
+top_10_movies <- titles %>% 
+  filter(type == "MOVIE") %>%
+  arrange(desc(tmdb_score)) %>%
+  select(title, tmdb_score, release_year, genres, ) 
+  
+  kable(head(top_10_movies,10),
+      align = "c",
+      caption = "<b><center>HBO's top 10 movies from tmdb_score" ,
+      format = "html") %>% 
+      kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+  
+  top_10_shows <- titles %>% 
+  filter(type == "SHOW") %>%
+  arrange(desc(tmdb_score)) %>%
+  select(title, tmdb_score, release_year, genres, ) %>%
+  head(10)
+
+  kable(head(top_10_shows,10),
+      align = "c",
+      caption = "<b><center>HBO's top 10 shows from tmdb_score",
+      format = "html") %>% 
+    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+```
+
+
+
+
+
+
+
+
+### Let's see if we can get a correlation from both imdb and tmdb scores find an average
+```{r , echo=FALSE}
+
+
+## Creating a new column called average_score
+
+titles = titles %>%  mutate(average_score = (imdb_score + tmdb_score)/2)
+
+## Working with movies
+top_10_movies = titles %>%
+  filter(type == "MOVIE") %>%
+  arrange(desc(average_score)) 
+
+kable(head(top_10_movies,10) %>% 
+      select(title, imdb_score , tmdb_score , average_score,release_year, genres),
+      align = "c",
+      caption = "<b><center>HBO's averaged top 10 movies from imdb_score and tmdb_score",
+      format = "html") %>% 
+      kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+
+
+## Working with shows
+top_10_shows = titles %>%
+  filter(type == "SHOW") %>%
+  arrange(desc(average_score)) 
+
+kable(head(top_10_shows,10) %>% 
+      select(title, imdb_score , tmdb_score , average_score,release_year, genres),
+      align = "c",
+      caption = "<b><center>HBO's averaged top 10 shows from imdb_score and tmdb_score",
+      format = "html") %>% 
+      kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
 
 
-## You can see there is a wide range of movies and tv shows, especially what year they were released. I wonder what the newest and oldest movies are?
 
-```{r , echo = FALSE}
-oldest_movie <- titles %>%
-  filter(type == "MOVIE") %>%
-  arrange(release_year) %>%
-  select(title, type, release_year, genres) %>%
-  head(1)
 
-oldest_movie
 
-newest_movie <- titles %>%
-  filter(type == "MOVIE") %>%
-  arrange(desc(release_year)) %>%
-  select(title, type, release_year, genres) %>%
-  head(1)
 
-newest_movie
 
-oldest_show <- titles %>%
-  filter(type == "SHOW") %>%
-  arrange(release_year) %>%
-  select(title, type, release_year, genres) %>%
-  head(1)
 
-oldest_show
 
-newest_show <- titles %>%
-  filter(type == "SHOW") %>%
-  arrange(desc(release_year)) %>%
-  select(title, type, release_year, genres) %>%
-  head(1)
 
-newest_show
+
+## Now explore if there's a relationship between longest movie and its popularity?
+
+```{r}
+movies_runtime = titles %>% 
+  filter(type == "MOVIE") 
+
+ggplot(movies_runtime, aes(x=runtime , y= average_score , tooltip = title)) + 
+  geom_point(color= "grey") + 
+  xlab("Duration in minutes") +
+  ylab("Popularity based on averages IMDB and TMDB scores)")+
+  ggtitle("Relationship between longest movie and its popularity")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme_bw()
+  ##geom_tooltip()
 ```
-I definitely have not seen either of those movies, but everyone should know last of us because of tiktok.
 
-
-## Now I am wondering what is the longest movie?
 
 ```{r}
 shortest_movie <- titles %>%
@@ -509,10 +586,7 @@ credits %>%
 
 
 
-## Here's both those graphs combined
-
-
-
+## Here's genre vs popularity graph based on movies and shows
 
 ```{r}
 genre_popularity <- titles %>%
