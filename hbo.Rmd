@@ -201,7 +201,7 @@ genre_counts <- titles %>%
   mutate(genres = gsub("\\[", "", genres)) %>% 
   mutate(genres = gsub("\\]", "", genres)) %>% 
   separate_rows(genres, sep = ", ") %>%     
-  group_by(genres, type, age_certification) %>%                
+  group_by(genres, type) %>%                
   summarize(Count = n()) %>%                  
   ungroup() %>%                               
   arrange(desc(Count)) %>%  
@@ -228,9 +228,9 @@ ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
 
 ```
 
- Here's the table of number of genres in descending order
+ 
 ```{r Distribution of Genres table, echo=FALSE}
-#
+#Here's the table of number of genres in descending order
 #kable(select(genre_counts, -age_certification), caption = "<b><center>Number of movies and TV shows by genre") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 
@@ -256,7 +256,19 @@ unique_age_certifications = unique(age_certifications)
 age_certifications_string = paste(unique_age_certifications, collapse = ", ")
 cat("Unique age certifications: ", age_certifications_string, "\n")   ##cat() helps print concatenated string with Unique age certifications: before our age_certifications_string
 
-genre_counts <- genre_counts %>% 
+
+new_genre_counts = titles %>%
+  mutate(genres = str_remove_all(genres, "'")) %>%                             
+  mutate(genres = gsub("\\[", "", genres)) %>% 
+  mutate(genres = gsub("\\]", "", genres)) %>% 
+  separate_rows(genres, sep = ", ") %>%     
+  group_by(genres, type, age_certification) %>%                
+  summarize(Count = n()) %>%                  
+  ungroup() %>%                               
+  arrange(desc(Count)) %>%  
+  filter(genres != "") 
+
+new_genre_counts <- new_genre_counts %>% 
   group_by(genres, type, age_certification) %>% 
   summarize(age_genre_count = n()) %>% 
   ungroup() %>% 
@@ -265,7 +277,7 @@ genre_counts <- genre_counts %>%
 
 
 ## Plotting
-ggplot(genre_counts,aes(x=age_certification , y=age_genre_count, fill = genres)) + geom_histogram(stat = "identity", position = "dodge") +
+ggplot(new_genre_counts,aes(x=age_certification , y=age_genre_count, fill = genres)) + geom_histogram(stat = "identity", position = "dodge") +
   labs(x = "Age Certification", y = "Number of Titles", title = "Age Certification and Genres") +
   theme_minimal() +
   theme(legend.position = "bottom") +
@@ -279,7 +291,7 @@ Well that did not work as expected. Let's see if a geom_tile graph does the job:
 
 ```{r age_restriction and genres2, echo=FALSE}
 
-ggplot(genre_counts, aes(x = age_certification, y = genres, fill = age_genre_count)) +
+ggplot(new_genre_counts, aes(x = age_certification, y = genres, fill = age_genre_count)) +
   geom_tile(color= "white") +
   labs(x = "Age Certification", y = "Genres", title = "Age Certification and Genres") +
   scale_fill_gradient(low = "white", high = "darkred") +
@@ -367,6 +379,25 @@ kable(head(directors_most_project, caption= "Directors with most projects"))%>% 
 ```
 
 
+### Which actors and directors are associated with the highiest-rated titles based on an average of IMDB and TMDB scores
+
+```{r Actors/Directors highiest-rated titles, echo=FALSE}
+both_data <- inner_join(titles, credits, by = "id")
+
+both_data = both_data %>%  mutate(average_score = (imdb_score + tmdb_score)/2)
+
+highiest_rated = both_data %>%  group_by(person_id,name, role,average_score,imdb_score,tmdb_score) %>%  
+  summarize(mean_score = (average_score)) %>% ungroup() %>%
+  arrange(desc(mean_score)) %>%  head(10)
+
+kable( highiest_rated, align = "c",
+  caption = "<b><center>Actors/Directors highiest-rated titles",
+  format = "html" ) %>% 
+  kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+
+
+
+```
 
 
 
@@ -405,8 +436,7 @@ kable(summary_table)
 
 This indicates us that HBO primarily features Movies and Shows from the decade of 2010s
 
-
-You can see there is a wide range of movies and tv shows, especially what year they were released. I wonder what the  oldest movies and shows are?
+You can see there is a wide range of movies and TV shows, especially what year they were released. I wonder what the  oldest movies and shows are?
 
 ```{r oldest movies and shows , echo = FALSE}
 
@@ -438,61 +468,85 @@ kable(head(titles %>%
 
 ```
 
+
+```{r (not using- Distribution of genres over time), echo=FALSE}
+## Let us explore the distribution of release year to see how selection of genres has changed over time
+
+
+##genre_by_year <- titles %>%
+##  mutate(genres = str_remove_all(genres, "'")) %>%                             
+##  mutate(genres = gsub("\\[", "", genres)) %>% 
+##  mutate(genres = gsub("\\]", "", genres)) %>% 
+##  separate_rows(genres, sep = ", ") %>%     
+##  group_by(genres, type, release_year) %>%                
+##  summarize(count = n()) %>%                  
+##  ungroup() %>%                               
+##  arrange(desc(count)) %>%  
+##  filter(genres != "") 
+##
+##
+##ggplot(genre_by_year, aes(x= release_year, y = count , color= genres))+
+##  geom_line(sixe = 1) + labs(title = "Distribution of genres over time", x= "Release Year" , y= "Number of Titles" , ##color = "Genres" )
+```
+
+
+
+
 ## Now let's see what are the top 10 most popular movies and show from imbd and tmdb
 
 ### Here are HBO's top 10 movies and shows according to imdb score
 ```{r top_10s , echo = FALSE}
 
-top_10_movies <- titles %>% 
-  filter(type == "MOVIE") %>%
+top_10_movies_imdb <- titles %>% 
+  filter(type %in% c("MOVIE","SHOW")) %>%
   arrange(desc(imdb_score)) %>%
-  select(title,imdb_score, release_year, genres, ) 
+  select(title,type, imdb_score, release_year, genres, ) 
   
-  kable(head(top_10_movies,10),
+  kable(head(top_10_movies_imdb,10),
       align = "c",
-      caption = "<b><center>HBO's top 10 movies from imdb_score",
+      caption = "<b><center>HBO's top 10 movies and shows from imdb_score",
       format = "html") %>% 
     kable_styling(bootstrap_options = "bordered", full_width = FALSE)
   
-top_10_shows <- titles %>% 
-  filter(type == "SHOW") %>%
-  arrange(desc(imdb_score)) %>%
-  select(title, imdb_score, release_year, genres, ) %>%
-  head(10)
-
-  kable(head(top_10_shows,10),
-      align = "c",
-      caption = "<b><center>HBO's top 10 shows from imdb_score",
-      format = "html") %>% 
-    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
-      
+#  top_10_shows <- titles %>% 
+#    filter(type == "SHOW") %>%
+#    arrange(desc(imdb_score)) %>%
+#    select(title, imdb_score, release_year, genres, ) %>%
+#    head(10)
+#  
+#    kable(head(top_10_shows,10),
+#        align = "c",
+#        caption = "<b><center>HBO's top 10 shows from imdb_score",
+#        format = "html") %>% 
+#      kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+#        
 ```
 
 ### Here are HBO's top 10 movies and shows according to tmdb score
 ```{r top_10s (2) , results='asis', echo=FALSE}
 
-top_10_movies <- titles %>% 
-  filter(type == "MOVIE") %>%
+top_10_tmdb <- titles %>% 
+  filter(type %in% c("MOVIE","SHOW")) %>%
   arrange(desc(tmdb_score)) %>%
-  select(title, tmdb_score, release_year, genres, ) 
+  select(title, type, tmdb_score, release_year, genres, ) 
   
-  kable(head(top_10_movies,10),
+  kable(head(top_10_tmdb,10),
       align = "c",
-      caption = "<b><center>HBO's top 10 movies from tmdb_score" ,
+      caption = "<b><center>HBO's top 10 movies and shows from tmdb_score" ,
       format = "html") %>% 
       kable_styling(bootstrap_options = "bordered", full_width = FALSE)
   
-  top_10_shows <- titles %>% 
-  filter(type == "SHOW") %>%
-  arrange(desc(tmdb_score)) %>%
-  select(title, tmdb_score, release_year, genres, ) %>%
-  head(10)
+ ## top_10_shows <- titles %>% 
+ ## filter(type == "SHOW") %>%
+ ## arrange(desc(tmdb_score)) %>%
+ ## select(title, tmdb_score, release_year, genres, ) %>%
+ ## head(10)
 
-  kable(head(top_10_shows,10),
-      align = "c",
-      caption = "<b><center>HBO's top 10 shows from tmdb_score",
-      format = "html") %>% 
-    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+ ## kable(head(top_10_shows,10),
+ ##     align = "c",
+ ##     caption = "<b><center>HBO's top 10 shows from tmdb_score",
+ ##     format = "html") %>% 
+ ##   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 ```
 
 
@@ -511,30 +565,30 @@ top_10_movies <- titles %>%
 titles = titles %>%  mutate(average_score = (imdb_score + tmdb_score)/2)
 
 ## Working with movies
-top_10_movies = titles %>%
-  filter(type == "MOVIE") %>%
+top_10_avg = titles %>%
+  filter(type %in% c("MOVIE","SHOW")) %>%
   arrange(desc(average_score)) 
 
-kable(head(top_10_movies,10) %>% 
-      select(title, imdb_score , tmdb_score , average_score,release_year, genres),
+kable(head(top_10_avg,10) %>% 
+      select(title,type, imdb_score , tmdb_score , average_score,release_year, genres),
       align = "c",
-      caption = "<b><center>HBO's averaged top 10 movies from imdb_score and tmdb_score",
+      caption = "<b><center>HBO's averaged top 10 movies and shows averaged from imdb_score and tmdb_score",
       format = "html") %>% 
       kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 
 ## Working with shows
-top_10_shows = titles %>%
-  filter(type == "SHOW") %>%
-  arrange(desc(average_score)) 
-
-kable(head(top_10_shows,10) %>% 
-      select(title, imdb_score , tmdb_score , average_score,release_year, genres),
-      align = "c",
-      caption = "<b><center>HBO's averaged top 10 shows from imdb_score and tmdb_score",
-      format = "html") %>% 
-      kable_styling(bootstrap_options = "bordered", full_width = FALSE)
-
+#top_10_shows = titles %>%
+#  filter(type == "SHOW") %>%
+#  arrange(desc(average_score)) 
+#
+#kable(head(top_10_shows,10) %>% 
+#      select(title, imdb_score , tmdb_score , average_score,release_year, genres),
+#      align = "c",
+#      caption = "<b><center>HBO's averaged top 10 shows from imdb_score and tmdb_score",
+#      format = "html") %>% 
+#      kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+#
 ```
 
 
@@ -557,12 +611,12 @@ movies_runtime = titles %>%
   filter(type == "MOVIE") 
 
 ggplot(movies_runtime, aes(x=runtime , y= average_score)) + 
-  geom_point(color= "grey") + 
+  geom_point(color= "purple") + 
   xlab("Duration in minutes") +
   ylab("Popularity based on averages IMDB and TMDB scores)")+
   ggtitle("Relationship between longest movie and its popularity")+
   theme(plot.title = element_text(hjust = 0.5))+
-  theme_bw()
+  theme_gray()
 
 #my_data= ggplot(movies_runtime, aes(x=runtime , y= average_score )) + #, data_id = title)) +
 #  geom_point(color= "grey",)+
@@ -673,25 +727,69 @@ ggplot(genre_popularity, aes(x = reorder(genres, Count), y = tmdb_popularity, fi
 
 Unfortunately, because HBO only got their movies and shows from 99 countries, there are some uncolored countries 
 
-```{r countries, echo=FALSE}
+```{r (unused) (shiny)countries, echo=FALSE}
 ## Defining UI
-ui = fluidPage(
-  sidebarLayout(
-    sidebarPanel(
-      selectInput("type" , "Select type:" , c("Movies", "Tv Shows")),
-      sliderInput("range", "Select range of values: ", min= 0, max = 1000, value = c(0,500), step =50)
-    ),
-    mainPanel(
-      plotOutput("map")
-    )
-  )
-)
+#  ui = fluidPage(
+#    sidebarLayout(
+#      sidebarPanel(
+#        selectInput("type" , "Select type:" , c("Movies", "Tv Shows")),
+#        sliderInput("range", "Select range of values: ", min= 0, max = 2000, value = c(0,500), #  step =50)
+#      ),
+#      mainPanel(
+#        plotOutput("map")
+#      )
+#    )
+#  )
+#  
+#  
+#  server = function(input,output) {
+#  
+#  
+#  countries = titles %>%
+#    mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
+#    mutate(production_countries = gsub("\\[", "", production_countries)) %>% 
+#    mutate(production_countries = gsub("\\]", "", production_countries)) %>% 
+#    separate_rows(production_countries, sep = ", ") %>%
+#    group_by(production_countries, type) %>%
+#    summarize(total = n()) %>%
+#    arrange(desc(total))
+#  
+#  ## Removing rows that has country unknown
+#  countries = filter(countries, !is.na(production_countries) & production_countries != "") 
+#  
+#  ## Creating a new column that represents the full country name of production countries
+#  countries$full_country_name <- countrycode(sourcevar = countries$production_countries, #  origin = "iso2c", destination= "country.name")
+#  
+#  
+#  # Renaming "United States" to "USA" to match with data in world_map
+#  countries <- countries %>% 
+#    mutate(full_country_name = if_else(full_country_name == "United States", "USA", #  full_country_name))
+#  
+#  ## We're going to try to show this data using a world map
+#  world_map = map_data("world")
+#    
+#  
+#  ## Let's join our world map and our countries data
+#  world_map_data= full_join(world_map, countries, by = c("region" = "full_country_name"))
+#  
+#  ## Plotting
+#  output$map = renderPlot( 
+#    {ggplot(world_map_data, aes(x = long, y = lat, group = group, fill = total)) +
+#    geom_polygon() +
+#    coord_equal() +
+#    scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = #  "darkblue", midpoint = 900) +
+#    labs(title = "Number of movies and TV shows by country", fill = "Count") + 
+#    theme_bw()
+#    } )
+#  }
+#  
+#  
+#  shinyApp(ui= ui, server = server)
 
+```
 
-server = function(input,output) {
-
-
-countries = titles %>%
+```{r (shiny)countries, echo=FALSE}
+countries <- titles %>%
   mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
   mutate(production_countries = gsub("\\[", "", production_countries)) %>% 
   mutate(production_countries = gsub("\\]", "", production_countries)) %>% 
@@ -700,45 +798,65 @@ countries = titles %>%
   summarize(total = n()) %>%
   arrange(desc(total))
 
-## Removing rows that has country unknown
-countries = filter(countries, !is.na(production_countries) & production_countries != "") 
+# Remove rows that have country unknown
+countries <- filter(countries, !is.na(production_countries) & production_countries != "") 
 
-## Creating a new column that represents the full country name of production countries
+# Create a new column that represents the full country name of production countries
 countries$full_country_name <- countrycode(sourcevar = countries$production_countries, origin = "iso2c", destination= "country.name")
 
-
-# Renaming "United States" to "USA" to match with data in world_map
+# Rename "United States" to "USA" to match with data in world_map
 countries <- countries %>% 
   mutate(full_country_name = if_else(full_country_name == "United States", "USA", full_country_name))
 
-## We're going to try to show this data using a world map
-world_map = map_data("world")
+# We're going to try to show this data using a world map
+world_map <- map_data("world")
+
+# Let's join our world map and our countries data
+world_map_data <- full_join(world_map, countries, by = c("region" = "full_country_name"))
+
+# Define UI
+ui <- fluidPage(
+  titlePanel("Number of movies and TV shows by country"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("type", "Select type", choices = unique(countries$type), selected = "movie"),
+      sliderInput("total", "Select total", min = 0, max = 1824, value = c(0, 1000))
+    ),
+    mainPanel(
+      plotOutput("map")
+    )
+  )
+)
+
+# Define server
+server <- function(input, output) {
+  # Filter data based on user input
+  filtered_data <- reactive({
+    world_map_data %>%
+      filter(type == input$type, total >= input$total[1], total <= input$total[2])
+  })
   
-
-## Let's join our world map and our countries data
-world_map_data= full_join(world_map, countries, by = c("region" = "full_country_name"))
-
-## Plotting
-output$map = renderPlot( 
-  {ggplot(world_map_data, aes(x = long, y = lat, group = group, fill = total)) +
-  geom_polygon() +
-  coord_equal() +
-  scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = "darkblue", midpoint = 900) +
-  labs(title = "Number of movies and TV shows by country", fill = "Count") + 
-  theme_bw()
-  } )
+  # Render map
+  output$map <- renderPlot({
+    ggplot(filtered_data(), aes(x = long, y = lat, group = group, fill = total)) +
+      geom_polygon() +
+      coord_equal() +
+      scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = "darkblue", midpoint = 900) +
+      labs(fill = "Count") +
+      theme_light()
+  })
 }
 
-
-shinyApp(ui= ui, server = server)
-
+# Run app
+shinyApp(ui, server)
 ```
 
 
 
 
 
-```{r}
+
+```{r countries, echo=FALSE}
 countries = titles %>%
   mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
   mutate(production_countries = gsub("\\[", "", production_countries)) %>% 
