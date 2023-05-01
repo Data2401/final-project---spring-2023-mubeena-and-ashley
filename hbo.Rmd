@@ -823,7 +823,7 @@ ui <- fluidPage(
       sliderInput("total", "Select total", min = 0, max = 1824, value = c(0, 1000))
     ),
     mainPanel(
-      plotOutput("map")
+      plotOutput("map", height = "500px", width = "800")
     )
   )
 )
@@ -839,7 +839,7 @@ server <- function(input, output) {
   # Render map
   output$map <- renderPlot({
     ggplot(filtered_data(), aes(x = long, y = lat, group = group, fill = total)) +
-      geom_polygon() +
+      geom_polygon(aes(fill = total), color = "black",size = 0.01) +
       coord_equal() +
       scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = "darkblue", midpoint = 900) +
       labs(fill = "Count") +
