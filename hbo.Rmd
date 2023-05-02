@@ -3,6 +3,7 @@ title: "HBO"
 author: "Ashley Wright & Mubeena Wahaj"
 date: "2022-05-02"
 output: slidy_presentation
+runtime: shiny
 ---
 
 
@@ -11,27 +12,49 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
 
 
-## Lights, camera, action!
+# Lights, camera, action!
 
 ![](https://images.squarespace-cdn.com/content/v1/52adf1abe4b0dbce9d210136/1616077888683-9Y12NX95XXTK11IESZCE/HBO+Maz+-+JL+ZS+GIF.gif?format=1500w)<centered>
 
-Today, we're going to take a deep dive into the world of HBO movies and TV shows. From the iconic dramas like The Sopranos and Game of Thrones to the latest releases. HBO has been providing quality content to its viewers for decades, but have you ever wondered how they make decisions about what shows to produce or which movies to acquire? That's where the fascinating world of HBO data comes into play. By analyzing audience trends, ratings, and viewer demographics, HBO can make informed decisions about what to offer to its loyal fans. So sit back, grab a snack, and get ready to explore the exciting world of HBO data.
+Today, we're going to take a deep dive into the world of HBO movies and TV shows.
+HBO has been providing quality content to its viewers for decades, but have you ever been stuck on what to watch? By analyzing ratings, popularity, and your favorite actors/actresses, lets take a look at what HBO can offer to its loyal fans.
 
+# What we will be looking into?
+Movies and shows on HBO
 
-### Installing packages
+What does the distribution of Genres look like for both movies and shows?
+
+Is there a correlations between age_restriction and genre?
+
+Actors and Directors involved with HBO
+
+Actors and Directors associated with highest-rated titles
+
+Distribution of Number of Movies and Shows by Release Year
+
+Top 10 most popular Movies and Shows
+
+Is there a correlation between Runtime of Movies and its Popularity?
+
+Is there a correlation between Genre and Popularity?
+
+Is there a correlation between the number of movies and shows produced and what country they come from?
+
+# Installing packages
 ```{r installing}
-#install.packages("ggrepel")
-#install.packages("ggiraph") ## to use geom_tooltip
-#install.packages("ggiraphExtra")
+#load ggrepel to use tooltip
+#load ggiraph to use geom_tooltip
+#load ggiraphExtra
 #load tidyverse to manipulate data
 #load ggplot2 for graphing
-#load shiny to...
+#load shiny for graphing
 #load dplyer to manipulate data
 #load knitr for general-purpose literate programming
 #load kableExtra to add features to table
+#load maps for map graph
 
-library(ggrepel) ## For using tooltip
-library(ggiraph)  ## For using geom_tooltip
+library(ggrepel)
+library(ggiraph)  
 library(ggiraphExtra)
 library(tidyverse)
 library(ggplot2)
@@ -44,16 +67,13 @@ library(maps)
 
 ```
 
-
-
-
-#### About Our Data
+# About Our Data
 
 The data we've decided to work on is from kaggle and is owned by Diego Enrique and here's the link:
 <https://www.kaggle.com/datasets/dgoenrique/hbo-max-movies-and-tv-shows>
+Our data consists of 2 csv's:
 
-
-##### Titles data:
+## Titles data:
 15 variables, 3030 observations
 
 id: The title ID
@@ -87,7 +107,7 @@ tmdb_popularity: Popularity on TMDB
 tmdb_score: Score on TMDB
 
 
-##### Credits data:
+## Credits data:
 5 variables, 64879 observations
 
 person_ID: The person ID on JustWatch
@@ -100,7 +120,7 @@ character_name: The name of character played in movie/show
 
 role: ACTOR or DIRECTOR
 
-## Let us read our datas, shall we?
+# Let us read our datas, shall we?
 
 ```{r read , echo = FALSE}
 
@@ -110,23 +130,18 @@ titles = read.csv("titles.csv", stringsAsFactors = FALSE)
 ## stringsAsFactors = FALSE is used to prevent R from automatically converting character vectors to factors when creating a data frame
 ```
 
-### We're using the kable and head function to show a part of the data sets we're working on but in an organized manner
-
+#### We're using the kable and head function to show a part of the data sets we're working on but in an organized manner
 
 ### Here's our credits.csv
 ```{r credits, echo = FALSE}
+
 kable(head(credits),
       align = "c",
       caption = "<b><center>Sample table of credits data",
       format = "html") %>% 
 kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
-
-
 ```
-
-
-
 
 ### And here's our titles.csv
 ```{r titles, echo = FALSE}
@@ -138,13 +153,10 @@ kable(head(titles),
       caption = "<b><center>Sample table of titles data",
       format = "html") %>% 
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
-
   
 ```
 
-
-
-### What if we try to combine these data sets?
+### What will it look like if we try to combine these data sets?
 
 ```{r combined}
 both_data <- inner_join(titles, credits, by = "id")
@@ -158,7 +170,7 @@ kable(head(both_data),
 ```
 
 
-## Let's begin by determining the number or movies and TV shows we are working with
+# Let's begin by determining the number or movies and TV shows we are working with
 
 ```{r MoviesAndShow, echo = FALSE}
 titles %>% 
@@ -166,11 +178,9 @@ titles %>%
   kable(format = "markdown", col.names = c("Type", "Count")) %>% 
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
-
 ## kable_styling() creates a nicely formatted table
 
 ```
-
 
 Wow! that's a lot more movies than shows!
  But let's see it visually
@@ -192,10 +202,10 @@ ggplot(title_counts, aes(x = type, y = Count, fill = type)) +
 ```
 
 
-
-## What's the distribution of genres for both Shows and Movies in our dataset?
+# What's the distribution of genres for both Shows and Movies in our dataset?
 
 ```{r Distribution of Genres, echo=FALSE}
+
 genre_counts <- titles %>%
   mutate(genres = str_remove_all(genres, "'")) %>%                             
   mutate(genres = gsub("\\[", "", genres)) %>% 
@@ -224,20 +234,17 @@ ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
   labs(x = "Genre", y = "Count", title = "Distribution of Genres") +
   theme_minimal()+coord_flip()   ## We flipped our coordinates so that the genre labels are easily readable  
 
-
-
 ```
 
- 
+
 ```{r Distribution of Genres table, echo=FALSE}
 #Here's the table of number of genres in descending order
-#kable(select(genre_counts, -age_certification), caption = "<b><center>Number of movies and TV shows by genre") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+#kable(genre_counts, caption = "<b><center>Number of movies and TV shows by genre") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 
 ```
 
-## Since we just finished oberserving the number of genres in our dataset
-Let us see if there's a correlation between age_restriction and genres
+## Now, let us see if there's a correlation between age_restriction and genres
 ```{r age_restriction and genres, echo=FALSE}
 
 ## Let's look at how many kinds of age certification are we dealing with
@@ -246,7 +253,7 @@ Let us see if there's a correlation between age_restriction and genres
 ## We didn't like the output taking up so much space so were creating a variable unique_age_certifications that contains the unique values of age_certification 
 ## We then use paste() to concatenate unique_age_certifications but with each value separated by comma and space
 
-  ## age_certifications = na.omit(titles$age_certification)  
+age_certifications = na.omit(titles$age_certification)  
 #this code did not work because missing columns are empty strings and not represented as NA
 
 #lets try using nzchar() 
@@ -298,25 +305,20 @@ ggplot(new_genre_counts, aes(x = age_certification, y = genres, fill = age_genre
   theme_grey()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   guides(fill = guide_colorbar(title = "Number of Titles", barwidth = 10, barheight = 0.5))
+
 ```
 
-
-
-
-
-
-## Now lets look at our Actor and Director columns in our credits data. 
+# Now lets look at our Actor and Director columns in our credits data. 
 
 ```{r credits data, echo=FALSE}
 
 kable(credits %>%
   count(role)) %>% 
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+
 ```
 
-
-Since actors and directors can have multiple projects, lets remove the duplicates
-
+## Since actors and directors can have multiple projects, lets remove the duplicates
 
 ```{r removing duplicates, echo=FALSE}
 ## Checking how many unique entries in name column
@@ -333,15 +335,10 @@ unique_directors =  credits %>%
 kable(unique_actors, caption = "Unique name for actors") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 kable(unique_directors, caption = "Unique name for directors") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
-  
-  
-
 
 ```
 
-
-
-Are any of these actors/directors in multiple projects? If so, who was in the most projects?
+## Are any of these actors/directors in multiple projects? If so, who was in the most projects?
 
 ```{r most project for A and D , echo=FALSE}
 #ACTORS
@@ -375,11 +372,9 @@ directors_most_project = directors_projects_per_person %>%
 
 kable(head(directors_most_project, caption= "Directors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
-
 ```
 
-
-### Which actors and directors are associated with the highiest-rated titles based on an average of IMDB and TMDB scores
+# Which actors and directors are among the highiest-rated scores based on an average of IMDB and TMDB scores
 
 ```{r Actors/Directors highiest-rated titles, echo=FALSE}
 both_data <- inner_join(titles, credits, by = "id")
@@ -395,16 +390,10 @@ kable( highiest_rated, align = "c",
   format = "html" ) %>% 
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
-
-
 ```
 
+# Here is the distribution of shows and movies available in HBO by release year
 
-
-
-
-
-## Here are the number of shows available in HBO by release year
 ```{r shows available in HBO by release year, echo = FALSE}
 
 # plot number of titles by year and type
@@ -416,6 +405,7 @@ ggplot(titles , aes(x = release_year, fill = type)) +
   theme(plot.title = element_text(hjust = 0.5))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
 
 ```
+
 Here's the summary table of what the graph shows
 
 ```{r decade summary, echo =FALSE}
@@ -426,7 +416,7 @@ titles$decade = cut(titles$release_year,
                     labels = paste0(seq(1900, 2020, 10), "s"))
 
 summary_table = titles %>% 
-  group_by(decade,type) %>% 
+  group_by(type, decade) %>% 
   summarise(count = n())
 
 
@@ -464,7 +454,28 @@ kable(head(titles %>%
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 
+## Newest movie
+kable(head(titles %>%
+  filter(type == "MOVIE") %>%
+  arrange(desc(release_year)) %>%
+  select(title, release_year, genres) %>% 
+    head(1)),
+  align = "c",
+  caption = "<b><center>Newest Movie on HBO",
+  format = "html" ) %>% 
+  kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
+
+## Newewst show
+kable(head(titles %>%
+  filter(type == "SHOW") %>%
+  arrange(desc(release_year)) %>%
+  select(title, release_year, genres) %>% 
+    head(1)),
+  align = "c",
+  caption = "<b><center>Newest Show on HBO",
+  format = "html" ) %>% 
+  kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
 
@@ -490,11 +501,9 @@ kable(head(titles %>%
 ```
 
 
+# Now let's see what are the top 10 most popular movies and show from imbd and tmdb
 
-
-## Now let's see what are the top 10 most popular movies and show from imbd and tmdb
-
-### Here are HBO's top 10 movies and shows according to imdb score
+## Here are HBO's top 10 movies and shows according to imdb score
 ```{r top_10s , echo = FALSE}
 
 top_10_movies_imdb <- titles %>% 
@@ -522,7 +531,7 @@ top_10_movies_imdb <- titles %>%
 #        
 ```
 
-### Here are HBO's top 10 movies and shows according to tmdb score
+## Here are HBO's top 10 movies and shows according to tmdb score
 ```{r top_10s (2) , results='asis', echo=FALSE}
 
 top_10_tmdb <- titles %>% 
@@ -549,14 +558,8 @@ top_10_tmdb <- titles %>%
  ##   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 ```
 
+## Let's see if we can get a correlation from both imdb and tmdb scores find an average
 
-
-
-
-
-
-
-### Let's see if we can get a correlation from both imdb and tmdb scores find an average
 ```{r avg top_10s, echo=FALSE}
 
 
@@ -591,17 +594,7 @@ kable(head(top_10_avg,10) %>%
 #
 ```
 
-
-
-
-
-
-
-
-
-
-
-## Now explore if there's a relationship between longest movie and its popularity?
+# Now explore if there's a relationship between longest movie and its popularity?
 
 ```{r runtime vs popularity, echo=FALSE}
 #library(ggiraph)
@@ -631,10 +624,10 @@ ggplot(movies_runtime, aes(x=runtime , y= average_score)) +
 #ggiraph(code = print(my_data), tooltip_my_data = "This movie's title contains a single quote: <b>'</b>", escape = FALSE)
 
 
-
 ```
 
 Since we're looking at runtimes, lets see what's HBO's shortest movie and show and the longest movie and show
+
 ```{r types of runtimes table, echo=FALSE}
 ## shortest movie
 kable(head(titles %>%
@@ -686,16 +679,10 @@ kable(head(titles %>%
   format = "html" ) %>% 
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
-
-
-
 ```
 
-
-
-
-## Ever wonder if your most favourite genre happens to be the most popular genre on HBO?
-### Let's find out 
+# Ever wonder if your most favourite genre happens to be the most popular genre on HBO?
+## Let's find out 
 Here's genre vs popularity graph based on movies and shows
 
 ```{r genre_popularity, echo=FALSE}
@@ -718,12 +705,10 @@ ggplot(genre_popularity, aes(x = reorder(genres, Count), y = tmdb_popularity, fi
   theme_light()+coord_flip()
 ```
 
-
-
-## Who would've know?!
+# Who would've known?!
 ![](https://media.tenor.com/VjFrECdBOq8AAAAC/say-what-now-anchorman.gif)
 
-## Last but not least, let us look at the Number of movies and TV shows by country 
+# Last but not least, let us look at the Number of movies and TV shows by country 
 
 Unfortunately, because HBO only got their movies and shows from 99 countries, there are some uncolored countries 
 
