@@ -383,7 +383,7 @@ both_data = both_data %>%  mutate(average_score = (imdb_score + tmdb_score)/2)
 
 highiest_rated = both_data %>%  group_by(person_id,name, role,average_score,imdb_score,tmdb_score) %>%  
   summarize(mean_score = (average_score)) %>% ungroup() %>%
-  arrange(desc(mean_score)) %>%  head(10)
+  arrange(desc(mean_score)) %>%  head()
 
 kable( highiest_rated, align = "c",
   caption = "<b><center>Actors/Directors highiest-rated titles",
@@ -888,3 +888,6 @@ world_map_data= full_join(world_map, countries, by = c("region" = "full_country_
  
 ```
 
+# Final Summary
+
+Hopefully, after the end of this, we may have created some tools to help you when you can't figure out what to watch. If you are looking for more variety, you would probably want to stick with movies as you have all types of options to choose from. Same with if you are wanting something newer. Based on our movies and shows by distribution graph, you will definitely have more options from the 1990's - 2000's. If you want to stick with a specific genre, our genre and popularity graph will help you with that, for example it shows that the drama genre is the most popular. 
