@@ -685,6 +685,49 @@ kable(head(titles %>%
 ## Let's find out 
 Here's genre vs popularity graph based on movies and shows
 
+
+
+
+```{r (shiny)genre_popularity,  echo=FALSE}
+ui <- fluidPage(
+  selectInput(inputId = "type", 
+              label = "Select the content type:", 
+              choices = c("MOVIE", "SHOW"),
+              selected = "Movie"),
+  plotOutput(outputId = "popularity_plot")
+)
+
+# Define the server logic
+server <- function(input, output) {
+  
+  genre_filter <- reactive({
+    genre_popularity <- titles %>%
+      filter(type == input$type) %>%
+      mutate(genres = str_remove_all(genres, "'")) %>% 
+      mutate(genres = gsub("\\[", "", genres)) %>% 
+      mutate(genres = gsub("\\]", "", genres)) %>% 
+      separate_rows(genres, sep = ", ") %>%
+      group_by(genres, type,imdb_score, tmdb_popularity, tmdb_score) %>%
+      summarize(Count = n()) %>%
+      ungroup() %>%
+      arrange(desc(tmdb_popularity))
+    return(genre_popularity)
+  })
+  
+  output$popularity_plot <- renderPlot({
+    ggplot(genre_filter(), aes(x = reorder(genres, Count), y = tmdb_popularity, fill = type)) +
+      geom_bar(stat = "identity") +
+      labs(x = "Genre", y = "tmdb_popularity", title = "Genres and its popularity") +
+      theme_light() + coord_flip()
+  })
+}
+
+# Run the app
+shinyApp(ui = ui, server = server)
+```
+
+
+
 ```{r genre_popularity, echo=FALSE}
 genre_popularity <- titles %>%
   mutate(genres = str_remove_all(genres, "'")) %>% 
