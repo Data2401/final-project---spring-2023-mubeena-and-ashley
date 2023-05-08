@@ -1,9 +1,14 @@
 ---
 title: "HBO Universe"
 author: "Ashley Wright & Mubeena Wahaj"
-date: "2022-05-02"
-output: slidy_presentation
-runtime: shiny
+date: "2022-05-09"
+output: 
+  html_document: 
+    highlight: kate
+    theme: cosmo
+##runtime: shiny
+editor_options: 
+  chunk_output_type: inline
 ---
 
 
@@ -20,42 +25,40 @@ Today, we're going to take a deep dive into the world of HBO movies and TV shows
 HBO has been providing quality content to its viewers for decades, but have you ever been stuck on what to watch? By analyzing ratings, popularity, and your favorite actors/actresses, lets take a look at what HBO can offer to its loyal fans.
 
 # What we will be looking into?
-Movies and shows on HBO
 
-What does the distribution of Genres look like for both movies and shows?
+* Movies and shows on HBO
 
-Is there a correlations between age_restriction and genre?
+* What does the distribution of Genres look like for both movies and shows?
 
-Actors and Directors involved with HBO
+* Correlations between age_restriction and genre?
 
-Actors and Directors associated with highest-rated titles
+* Actors and Directors involved with HBO
 
-Distribution of Number of Movies and Shows by Release Year
+* Actors and Directors associated with highest-rated titles
 
-Top 10 most popular Movies and Shows
+* Distribution of Number of Movies and Shows by Release Year
 
-Is there a correlation between Runtime of Movies and its Popularity?
+* Top 10 most popular Movies and Shows
 
-Is there a correlation between Genre and Popularity?
+* Correlation between Run-time of Movies and its Popularity?
 
-Is there a correlation between the number of movies and shows produced and what country they come from?
+* Correlation between Genre and Popularity?
+
+* Correlation between the number of movies and shows produced and what country they come from?
 
 # Installing packages
+
 ```{r installing}
-#load ggrepel to use tooltip
-#load ggiraph to use geom_tooltip
-#load ggiraphExtra
+
 #load tidyverse to manipulate data
 #load ggplot2 for graphing
 #load shiny for graphing
-#load dplyer to manipulate data
+#load dplyr to manipulate data
 #load knitr for general-purpose literate programming
 #load kableExtra to add features to table
 #load maps for map graph
 
-library(ggrepel)
-library(ggiraph)  
-library(ggiraphExtra)
+
 library(tidyverse)
 library(ggplot2)
 library(shiny)
@@ -74,6 +77,7 @@ The data we've decided to work on is from kaggle and is owned by Diego Enrique a
 Our data consists of 2 csv's:
 
 ## Titles data:
+
 15 variables, 3030 observations
 
 id: The title ID
@@ -108,6 +112,7 @@ tmdb_score: Score on TMDB
 
 
 ## Credits data:
+
 5 variables, 64879 observations
 
 person_ID: The person ID on JustWatch
@@ -133,6 +138,7 @@ titles = read.csv("titles.csv", stringsAsFactors = FALSE)
 #### We're using the kable and head function to show a part of the data sets we're working on but in an organized manner
 
 ### Here's our credits.csv
+
 ```{r credits, echo = FALSE}
 
 kable(head(credits),
@@ -168,7 +174,8 @@ kable(head(both_data),
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
-
+ 
+ Because we have multiple pero
 
 # Let's begin by determining the number or movies and TV shows we are working with
 
@@ -181,6 +188,7 @@ titles %>%
 ## kable_styling() creates a nicely formatted table
 
 ```
+
 
 Wow! that's a lot more movies than shows!
  But let's see it visually
@@ -237,12 +245,7 @@ ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
 ```
 
 
-```{r Distribution of Genres table, echo=FALSE}
-#Here's the table of number of genres in descending order
-#kable(genre_counts, caption = "<b><center>Number of movies and TV shows by genre") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
-
-```
 
 ## Now, let us see if there's a correlation between age_restriction and genres
 ```{r age_restriction and genres, echo=FALSE}
@@ -270,25 +273,23 @@ new_genre_counts = titles %>%
   mutate(genres = gsub("\\]", "", genres)) %>% 
   separate_rows(genres, sep = ", ") %>%     
   group_by(genres, type, age_certification) %>%                
-  summarize(Count = n()) %>%                  
+  summarize(age_genre_count = n()) %>%                  
   ungroup() %>%                               
-  arrange(desc(Count)) %>%  
-  filter(genres != "") 
+  arrange(desc(age_genre_count)) %>%  
+  filter(genres != ""& nzchar(age_certification))
 
-new_genre_counts <- new_genre_counts %>% 
-  group_by(genres, type, age_certification) %>% 
-  summarize(age_genre_count = n()) %>% 
-  ungroup() %>% 
-  arrange(desc(age_genre_count)) %>% 
-  filter(genres != "" & nzchar(age_certification))
+
+#new_genre_counts <- new_genre_counts %>% 
+#  arrange(desc(age_genre_count)) %>% 
+#  filter(genres != "" & nzchar(age_certification))
 
 
 ## Plotting
-ggplot(new_genre_counts,aes(x=age_certification , y=age_genre_count, fill = genres)) + geom_histogram(stat = "identity", position = "dodge") +
+ggplot(new_genre_counts,aes(x=age_certification , y=age_genre_count, fill = genres)) + geom_col(stat = "identity", position = "dodge") +
   labs(x = "Age Certification", y = "Number of Titles", title = "Age Certification and Genres") +
   theme_minimal() +
-  theme(legend.position = "bottom") +
-  guides(fill = guide_legend(nrow = 2, byrow = TRUE)) 
+  theme(legend.position = "bottom") 
+  #guides(fill = guide_legend(nrow = 2, byrow = TRUE)) 
   #facet_wrap(~genres, scales = "free_x")   ### BAD IDEA
   
 
@@ -301,10 +302,11 @@ Well that did not work as expected. Let's see if a geom_tile graph does the job:
 ggplot(new_genre_counts, aes(x = age_certification, y = genres, fill = age_genre_count)) +
   geom_tile(color= "white") +
   labs(x = "Age Certification", y = "Genres", title = "Age Certification and Genres") +
-  scale_fill_gradient(low = "white", high = "darkred") +
+  scale_fill_gradient(low = "violet", high = "purple") +
   theme_grey()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  guides(fill = guide_colorbar(title = "Number of Titles", barwidth = 10, barheight = 0.5))
+  guides(fill = guide_colorbar(title = "Number of Titles", barwidth = 1, barheight = 4))
+  
 
 ```
 
@@ -381,14 +383,15 @@ both_data <- inner_join(titles, credits, by = "id")
 
 both_data = both_data %>%  mutate(average_score = (imdb_score + tmdb_score)/2)
 
-highiest_rated = both_data %>%  group_by(person_id,name, role,average_score,imdb_score,tmdb_score) %>%  
-  summarize(mean_score = (average_score)) %>% ungroup() %>%
-  arrange(desc(mean_score)) %>%  head()
+highiest_rated = both_data %>%  select(person_id,name, role,title, average_score,imdb_score,tmdb_score) %>%  
+  group_by(title) %>% slice_sample(n = 1) %>% arrange(desc(average_score)) %>% 
+  head(10)
 
 kable( highiest_rated, align = "c",
   caption = "<b><center>Actors/Directors highiest-rated titles",
   format = "html" ) %>% 
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+
 
 ```
 
@@ -409,7 +412,7 @@ ggplot(titles , aes(x = release_year, fill = type)) +
 Here's the summary table of what the graph shows
 
 ```{r decade summary, echo =FALSE}
-## creating a new column in our titles.csv called decades: this will categorize what realease year as per their decades
+## creating a new column in our titles.csv called decades: this will categorize what release year as per their decades
 
 titles$decade = cut(titles$release_year, 
                     breaks = c(seq(1899, 2019, 10), 2021), 
@@ -417,7 +420,7 @@ titles$decade = cut(titles$release_year,
 
 summary_table = titles %>% 
   group_by(type, decade) %>% 
-  summarise(count = n())
+  summarise(count = n()) %>% pivot_wider(names_from = type, values_from = count)
 
 
 kable(summary_table)
@@ -728,7 +731,7 @@ countries$full_country_name <- countrycode(sourcevar = countries$production_coun
 
 
 
-kable(countries,
+kable(countries %>% pivot_wider(names_from = type, values_from = total),
       align = "c",
       caption = "<b><center>Number of movies and TV shows by country",
       format = "html")%>% 
