@@ -1,5 +1,5 @@
 ---
-title: "HBO"
+title: "HBO Universe"
 author: "Ashley Wright & Mubeena Wahaj"
 date: "2022-05-02"
 output: slidy_presentation
@@ -686,48 +686,6 @@ kable(head(titles %>%
 Here's genre vs popularity graph based on movies and shows
 
 
-
-
-```{r (shiny)genre_popularity,  echo=FALSE}
-ui <- fluidPage(
-  selectInput(inputId = "type", 
-              label = "Select the content type:", 
-              choices = c("MOVIE", "SHOW"),
-              selected = "Movie"),
-  plotOutput(outputId = "popularity_plot")
-)
-
-# Define the server logic
-server <- function(input, output) {
-  
-  genre_filter <- reactive({
-    genre_popularity <- titles %>%
-      filter(type == input$type) %>%
-      mutate(genres = str_remove_all(genres, "'")) %>% 
-      mutate(genres = gsub("\\[", "", genres)) %>% 
-      mutate(genres = gsub("\\]", "", genres)) %>% 
-      separate_rows(genres, sep = ", ") %>%
-      group_by(genres, type,imdb_score, tmdb_popularity, tmdb_score) %>%
-      summarize(Count = n()) %>%
-      ungroup() %>%
-      arrange(desc(tmdb_popularity))
-    return(genre_popularity)
-  })
-  
-  output$popularity_plot <- renderPlot({
-    ggplot(genre_filter(), aes(x = reorder(genres, Count), y = tmdb_popularity, fill = type)) +
-      geom_bar(stat = "identity") +
-      labs(x = "Genre", y = "tmdb_popularity", title = "Genres and its popularity") +
-      theme_light() + coord_flip()
-  })
-}
-
-# Run the app
-shinyApp(ui = ui, server = server)
-```
-
-
-
 ```{r genre_popularity, echo=FALSE}
 genre_popularity <- titles %>%
   mutate(genres = str_remove_all(genres, "'")) %>% 
@@ -748,142 +706,9 @@ ggplot(genre_popularity, aes(x = reorder(genres, Count), y = tmdb_popularity, fi
   theme_light()+coord_flip()
 ```
 
-# Who would've known?!
-![](https://media.tenor.com/VjFrECdBOq8AAAAC/say-what-now-anchorman.gif)
-
 # Last but not least, let us look at the Number of movies and TV shows by country 
 
 Unfortunately, because HBO only got their movies and shows from 99 countries, there are some uncolored countries 
-
-```{r (unused) (shiny)countries, echo=FALSE}
-## Defining UI
-#  ui = fluidPage(
-#    sidebarLayout(
-#      sidebarPanel(
-#        selectInput("type" , "Select type:" , c("Movies", "Tv Shows")),
-#        sliderInput("range", "Select range of values: ", min= 0, max = 2000, value = c(0,500), #  step =50)
-#      ),
-#      mainPanel(
-#        plotOutput("map")
-#      )
-#    )
-#  )
-#  
-#  
-#  server = function(input,output) {
-#  
-#  
-#  countries = titles %>%
-#    mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
-#    mutate(production_countries = gsub("\\[", "", production_countries)) %>% 
-#    mutate(production_countries = gsub("\\]", "", production_countries)) %>% 
-#    separate_rows(production_countries, sep = ", ") %>%
-#    group_by(production_countries, type) %>%
-#    summarize(total = n()) %>%
-#    arrange(desc(total))
-#  
-#  ## Removing rows that has country unknown
-#  countries = filter(countries, !is.na(production_countries) & production_countries != "") 
-#  
-#  ## Creating a new column that represents the full country name of production countries
-#  countries$full_country_name <- countrycode(sourcevar = countries$production_countries, #  origin = "iso2c", destination= "country.name")
-#  
-#  
-#  # Renaming "United States" to "USA" to match with data in world_map
-#  countries <- countries %>% 
-#    mutate(full_country_name = if_else(full_country_name == "United States", "USA", #  full_country_name))
-#  
-#  ## We're going to try to show this data using a world map
-#  world_map = map_data("world")
-#    
-#  
-#  ## Let's join our world map and our countries data
-#  world_map_data= full_join(world_map, countries, by = c("region" = "full_country_name"))
-#  
-#  ## Plotting
-#  output$map = renderPlot( 
-#    {ggplot(world_map_data, aes(x = long, y = lat, group = group, fill = total)) +
-#    geom_polygon() +
-#    coord_equal() +
-#    scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = #  "darkblue", midpoint = 900) +
-#    labs(title = "Number of movies and TV shows by country", fill = "Count") + 
-#    theme_bw()
-#    } )
-#  }
-#  
-#  
-#  shinyApp(ui= ui, server = server)
-
-```
-
-```{r (shiny)countries, echo=FALSE}
-countries <- titles %>%
-  mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
-  mutate(production_countries = gsub("\\[", "", production_countries)) %>% 
-  mutate(production_countries = gsub("\\]", "", production_countries)) %>% 
-  separate_rows(production_countries, sep = ", ") %>%
-  group_by(production_countries, type) %>%
-  summarize(total = n()) %>%
-  arrange(desc(total))
-
-# Remove rows that have country unknown
-countries <- filter(countries, !is.na(production_countries) & production_countries != "") 
-
-# Create a new column that represents the full country name of production countries
-countries$full_country_name <- countrycode(sourcevar = countries$production_countries, origin = "iso2c", destination= "country.name")
-
-# Rename "United States" to "USA" to match with data in world_map
-countries <- countries %>% 
-  mutate(full_country_name = if_else(full_country_name == "United States", "USA", full_country_name))
-
-# We're going to try to show this data using a world map
-world_map <- map_data("world")
-
-# Let's join our world map and our countries data
-world_map_data <- full_join(world_map, countries, by = c("region" = "full_country_name"))
-
-# Define UI
-ui <- fluidPage(
-  titlePanel("Number of movies and TV shows by country"),
-  sidebarLayout(
-    sidebarPanel(
-      selectInput("type", "Select type", choices = unique(countries$type), selected = "movie"),
-      sliderInput("total", "Select total", min = 0, max = 1824, value = c(0, 1000))
-    ),
-    mainPanel(
-      plotOutput("map", height = "500px", width = "800")
-    )
-  )
-)
-
-# Define server
-server <- function(input, output) {
-  # Filter data based on user input
-  filtered_data <- reactive({
-    world_map_data %>%
-      filter(type == input$type, total >= input$total[1], total <= input$total[2])
-  })
-  
-  # Render map
-  output$map <- renderPlot({
-    ggplot(filtered_data(), aes(x = long, y = lat, group = group, fill = total)) +
-      geom_polygon(aes(fill = total), color = "black",size = 0.01) +
-      coord_equal() +
-      scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = "darkblue", midpoint = 900) +
-      labs(fill = "Count") +
-      theme_light()
-  })
-}
-
-# Run app
-shinyApp(ui, server)
-```
-
-
-
-
-
-
 ```{r countries, echo=FALSE}
 countries = titles %>%
   mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
