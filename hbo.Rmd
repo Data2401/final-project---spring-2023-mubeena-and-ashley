@@ -42,9 +42,7 @@ Is there a correlation between the number of movies and shows produced and what 
 
 # Installing packages
 ```{r installing}
-#load ggrepel to use tooltip
-#load ggiraph to use geom_tooltip
-#load ggiraphExtra
+
 #load tidyverse to manipulate data
 #load ggplot2 for graphing
 #load shiny for graphing
@@ -53,9 +51,6 @@ Is there a correlation between the number of movies and shows produced and what 
 #load kableExtra to add features to table
 #load maps for map graph
 
-library(ggrepel)
-library(ggiraph)  
-library(ggiraphExtra)
 library(tidyverse)
 library(ggplot2)
 library(shiny)
@@ -65,6 +60,13 @@ library(knitr)
 library(kableExtra)
 library(maps)
 
+
+## load ggrepel to use tooltip
+## load ggiraph to use geom_tooltip
+## load ggiraphExtra
+## library(ggrepel)
+## library(ggiraph)  
+## library(ggiraphExtra
 ```
 
 # About Our Data
