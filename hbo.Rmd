@@ -1,10 +1,15 @@
 ---
-title: "HBO"
+title: "HBO Universe"
 author: "Ashley Wright & Mubeena Wahaj"
-date: "2022-05-02"
-output: slidy_presentation
-runtime: shiny
+date: "2022-05-09"
+output: 
+  rmdformats::readthedown :
+    highlight: tango
+##runtime: shiny
+editor_options: 
+  chunk_output_type: inline
 ---
+
 
 
 ```{r setup, include=FALSE}
@@ -13,43 +18,53 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 
 # Lights, camera, action!
+<center>
+![](https://images.squarespace-cdn.com/content/v1/52adf1abe4b0dbce9d210136/1616077888683-9Y12NX95XXTK11IESZCE/HBO+Maz+-+JL+ZS+GIF.gif?format=1500w)
+</center>
 
-![](https://images.squarespace-cdn.com/content/v1/52adf1abe4b0dbce9d210136/1616077888683-9Y12NX95XXTK11IESZCE/HBO+Maz+-+JL+ZS+GIF.gif?format=1500w)<centered>
-
-Today, we're going to take a deep dive into the world of HBO movies and TV shows.
+For our final project, we're going to take a deep dive into the world of HBO movies and TV shows.
 HBO has been providing quality content to its viewers for decades, but have you ever been stuck on what to watch? By analyzing ratings, popularity, and your favorite actors/actresses, lets take a look at what HBO can offer to its loyal fans.
 
 # What we will be looking into?
-Movies and shows on HBO
 
-What does the distribution of Genres look like for both movies and shows?
+* Movies and shows on HBO
 
-Is there a correlations between age_restriction and genre?
+* What does the distribution of Genres look like for both movies and shows?
 
-Actors and Directors involved with HBO
+* Correlations between age_restriction and genre?
 
-Actors and Directors associated with highest-rated titles
+* Actors and Directors involved with HBO
 
-Distribution of Number of Movies and Shows by Release Year
+* Actors and Directors associated with highest-rated titles
 
-Top 10 most popular Movies and Shows
+* Distribution of Number of Movies and Shows by Release Year
 
-Is there a correlation between Runtime of Movies and its Popularity?
+* Top 10 most popular Movies and Shows
 
-Is there a correlation between Genre and Popularity?
+* Correlation between Run-time of Movies and its Popularity?
 
-Is there a correlation between the number of movies and shows produced and what country they come from?
+* Correlation between Genre and Popularity?
+
+* Correlation between the number of movies and shows produced and what country they come from?
 
 # Installing packages
+
 ```{r installing}
+
+
+# install.packages("rmarkdown")
+
 
 #load tidyverse to manipulate data
 #load ggplot2 for graphing
 #load shiny for graphing
-#load dplyer to manipulate data
+#load dplyr to manipulate data
 #load knitr for general-purpose literate programming
 #load kableExtra to add features to table
 #load maps for map graph
+
+library(rmarkdown)  ## used for our output theme 'readthedown'
+#render("mydocument.Rmd")
 
 library(tidyverse)
 library(ggplot2)
@@ -67,15 +82,21 @@ library(maps)
 ## library(ggrepel)
 ## library(ggiraph)  
 ## library(ggiraphExtra
+
 ```
 
 # About Our Data
 
-The data we've decided to work on is from kaggle and is owned by Diego Enrique and here's the link:
+The dataset we have chosen to work with is sourced from Kaggle and is the property of Diego Enrique. Here is the link to access it: 
 <https://www.kaggle.com/datasets/dgoenrique/hbo-max-movies-and-tv-shows>
-Our data consists of 2 csv's:
+
+Additionally, we would like to provide the link for rmdformats  library used for the 'readthedown' output theme used in our project, which was created by Julien Barnier. Here's the link to the theme:
+<https://mran.microsoft.com/snapshot/2019-12-15/web/packages/rmdformats/vignettes/introduction.html>
+
+## Our data consists of 2 csv's:
 
 ## Titles data:
+
 15 variables, 3030 observations
 
 id: The title ID
@@ -110,6 +131,7 @@ tmdb_score: Score on TMDB
 
 
 ## Credits data:
+
 5 variables, 64879 observations
 
 person_ID: The person ID on JustWatch
@@ -134,7 +156,8 @@ titles = read.csv("titles.csv", stringsAsFactors = FALSE)
 
 #### We're using the kable and head function to show a part of the data sets we're working on but in an organized manner
 
-### Here's our credits.csv
+## Here's our credits.csv
+
 ```{r credits, echo = FALSE}
 
 kable(head(credits),
@@ -145,7 +168,7 @@ kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
 
-### And here's our titles.csv
+## And here's our titles.csv
 ```{r titles, echo = FALSE}
 
 titles <- within(titles, rm(description))
@@ -158,10 +181,10 @@ kable(head(titles),
   
 ```
 
-### What will it look like if we try to combine these data sets?
+## What will it look like if we try to combine these data sets?
 
 ```{r combined}
-both_data <- inner_join(titles, credits, by = "id")
+both_data <- left_join(titles, credits, by = "id")
 
 kable(head(both_data),
       align = "c",
@@ -170,19 +193,21 @@ kable(head(both_data),
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
-
+ 
+ Because we have multiple pero
 
 # Let's begin by determining the number or movies and TV shows we are working with
 
 ```{r MoviesAndShow, echo = FALSE}
 titles %>% 
   count(type) %>%  
-  kable(format = "markdown", col.names = c("Type", "Count")) %>% 
+  kable(format = "markdown",align = "c", col.names = c("Type", "Count")) %>% 
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ## kable_styling() creates a nicely formatted table
 
 ```
+
 
 Wow! that's a lot more movies than shows!
  But let's see it visually
@@ -196,7 +221,7 @@ title_counts = data.frame(
 
 # Create the bar chart
 ggplot(title_counts, aes(x = type, y = Count, fill = type)) +
-  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity") +geom_text(aes(label = Count ))+ ## We have learnt this line of code from Max. this displays the count on each bar
   ggtitle("Number of Movies and Shows") +
   xlab("") +
   ylab("Count")
@@ -239,14 +264,9 @@ ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
 ```
 
 
-```{r Distribution of Genres table, echo=FALSE}
-#Here's the table of number of genres in descending order
-#kable(genre_counts, caption = "<b><center>Number of movies and TV shows by genre") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 
-```
-
-## Now, let us see if there's a correlation between age_restriction and genres
+# Now, let us see if there's a correlation between age_restriction and genres
 ```{r age_restriction and genres, echo=FALSE}
 
 ## Let's look at how many kinds of age certification are we dealing with
@@ -272,25 +292,23 @@ new_genre_counts = titles %>%
   mutate(genres = gsub("\\]", "", genres)) %>% 
   separate_rows(genres, sep = ", ") %>%     
   group_by(genres, type, age_certification) %>%                
-  summarize(Count = n()) %>%                  
+  summarize(age_genre_count = n()) %>%                  
   ungroup() %>%                               
-  arrange(desc(Count)) %>%  
-  filter(genres != "") 
+  arrange(desc(age_genre_count)) %>%  
+  filter(genres != ""& nzchar(age_certification))
 
-new_genre_counts <- new_genre_counts %>% 
-  group_by(genres, type, age_certification) %>% 
-  summarize(age_genre_count = n()) %>% 
-  ungroup() %>% 
-  arrange(desc(age_genre_count)) %>% 
-  filter(genres != "" & nzchar(age_certification))
+
+#new_genre_counts <- new_genre_counts %>% 
+#  arrange(desc(age_genre_count)) %>% 
+#  filter(genres != "" & nzchar(age_certification))
 
 
 ## Plotting
-ggplot(new_genre_counts,aes(x=age_certification , y=age_genre_count, fill = genres)) + geom_histogram(stat = "identity", position = "dodge") +
+ggplot(new_genre_counts,aes(x=age_certification , y=age_genre_count, fill = genres)) + geom_col(stat = "identity", position = "dodge") +
   labs(x = "Age Certification", y = "Number of Titles", title = "Age Certification and Genres") +
   theme_minimal() +
-  theme(legend.position = "bottom") +
-  guides(fill = guide_legend(nrow = 2, byrow = TRUE)) 
+  theme(legend.position = "bottom") 
+  #guides(fill = guide_legend(nrow = 2, byrow = TRUE)) 
   #facet_wrap(~genres, scales = "free_x")   ### BAD IDEA
   
 
@@ -303,10 +321,11 @@ Well that did not work as expected. Let's see if a geom_tile graph does the job:
 ggplot(new_genre_counts, aes(x = age_certification, y = genres, fill = age_genre_count)) +
   geom_tile(color= "white") +
   labs(x = "Age Certification", y = "Genres", title = "Age Certification and Genres") +
-  scale_fill_gradient(low = "white", high = "darkred") +
+  scale_fill_gradient(low = "slateblue1", high = "mediumorchid3") +
   theme_grey()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  guides(fill = guide_colorbar(title = "Number of Titles", barwidth = 10, barheight = 0.5))
+  guides(fill = guide_colorbar(title = "Number of Titles", barwidth = 1, barheight = 4))
+  
 
 ```
 
@@ -334,9 +353,9 @@ unique_directors =  credits %>%
   select(name) %>%
   summarize(unique_names_of_directors = n_distinct(name))
 
-kable(unique_actors, caption = "Unique name for actors") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+kable(unique_actors, align = "c",caption = "Unique name for actors") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
-kable(unique_directors, caption = "Unique name for directors") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+kable(unique_directors, align = "c",caption = "Unique name for directors") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
 
@@ -357,7 +376,7 @@ actor_most_project = actors_projects_per_person %>%  group_by(person_id, name, r
 
 
 
-kable(head(actor_most_project, caption= "Actors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+kable(head(actor_most_project,align = "c", caption= "Actors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 #DIRECTORS
 directors_projects_per_person = credits %>%  
@@ -372,25 +391,26 @@ directors_most_project = directors_projects_per_person %>%
   summarize(total_projects = sum(num_projects)) %>% 
   arrange(desc(total_projects))
 
-kable(head(directors_most_project, caption= "Directors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+kable(head(directors_most_project,align = "c", caption= "Directors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
 
-# Which actors and directors are among the highiest-rated scores based on an average of IMDB and TMDB scores
+##  Which actors and directors are among the highiest-rated scores based on an average of IMDB and TMDB scores
 
 ```{r Actors/Directors highiest-rated titles, echo=FALSE}
 both_data <- inner_join(titles, credits, by = "id")
 
 both_data = both_data %>%  mutate(average_score = (imdb_score + tmdb_score)/2)
 
-highiest_rated = both_data %>%  group_by(person_id,name, role,average_score,imdb_score,tmdb_score) %>%  
-  summarize(mean_score = (average_score)) %>% ungroup() %>%
-  arrange(desc(mean_score)) %>%  head()
+highiest_rated = both_data %>%  select(person_id,name, role,title, average_score,imdb_score,tmdb_score) %>%  
+  group_by(title) %>% slice_sample(n = 1) %>% arrange(desc(average_score)) %>% 
+  head(10)
 
 kable( highiest_rated, align = "c",
   caption = "<b><center>Actors/Directors highiest-rated titles",
   format = "html" ) %>% 
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+
 
 ```
 
@@ -400,18 +420,18 @@ kable( highiest_rated, align = "c",
 
 # plot number of titles by year and type
 ggplot(titles , aes(x = release_year, fill = type)) +
-  geom_bar(color ="grey", size = .1) +
+  geom_bar(color ="white", size = .1) +
   labs(x = "Release Year", y = "Number of Titles", title = "Number of Shows and Movies Available by Year") +
-  scale_fill_manual(values = c("SHOW" = "blue", "MOVIE" = "red")) +
+  #scale_fill_manual(values = c("SHOW" = "blue", "MOVIE" = "red")) +
   scale_x_continuous(breaks = seq(1900, 2020, by = 10), labels = paste0(seq(1900, 2020, by = 10), "s")) +
   theme(plot.title = element_text(hjust = 0.5))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
 
 ```
 
-Here's the summary table of what the graph shows
+## Here's the summary table of what the graph shows
 
 ```{r decade summary, echo =FALSE}
-## creating a new column in our titles.csv called decades: this will categorize what realease year as per their decades
+## creating a new column in our titles.csv called decades: this will categorize what release year as per their decades
 
 titles$decade = cut(titles$release_year, 
                     breaks = c(seq(1899, 2019, 10), 2021), 
@@ -419,16 +439,23 @@ titles$decade = cut(titles$release_year,
 
 summary_table = titles %>% 
   group_by(type, decade) %>% 
-  summarise(count = n())
+  summarise(count = n()) #%>% pivot_wider(names_from = type, values_from = count)
 
 
-kable(summary_table)
+#kable(summary_table)
 
+kable(summary_table %>% pivot_wider(names_from = type, values_from = count),
+      align = "c",
+      caption = "<b><center>Number of Shows and Movies Available by Year",
+      format = "html")%>% 
+    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 ```
 
 This indicates us that HBO primarily features Movies and Shows from the decade of 2010s
 
-You can see there is a wide range of movies and TV shows, especially what year they were released. I wonder what the  oldest movies and shows are?
+You can see there is a wide range of movies and TV shows, especially what year they were released. 
+
+## I wonder what the  oldest movies and shows are?
 
 ```{r oldest movies and shows , echo = FALSE}
 
@@ -628,7 +655,7 @@ ggplot(movies_runtime, aes(x=runtime , y= average_score)) +
 
 ```
 
-Since we're looking at runtimes, lets see what's HBO's shortest movie and show and the longest movie and show
+## Since we're looking at runtimes, lets see what's HBO's shortest movie and show and the longest movie and show
 
 ```{r types of runtimes table, echo=FALSE}
 ## shortest movie
@@ -688,48 +715,6 @@ kable(head(titles %>%
 Here's genre vs popularity graph based on movies and shows
 
 
-
-
-```{r (shiny)genre_popularity,  echo=FALSE}
-ui <- fluidPage(
-  selectInput(inputId = "type", 
-              label = "Select the content type:", 
-              choices = c("MOVIE", "SHOW"),
-              selected = "Movie"),
-  plotOutput(outputId = "popularity_plot")
-)
-
-# Define the server logic
-server <- function(input, output) {
-  
-  genre_filter <- reactive({
-    genre_popularity <- titles %>%
-      filter(type == input$type) %>%
-      mutate(genres = str_remove_all(genres, "'")) %>% 
-      mutate(genres = gsub("\\[", "", genres)) %>% 
-      mutate(genres = gsub("\\]", "", genres)) %>% 
-      separate_rows(genres, sep = ", ") %>%
-      group_by(genres, type,imdb_score, tmdb_popularity, tmdb_score) %>%
-      summarize(Count = n()) %>%
-      ungroup() %>%
-      arrange(desc(tmdb_popularity))
-    return(genre_popularity)
-  })
-  
-  output$popularity_plot <- renderPlot({
-    ggplot(genre_filter(), aes(x = reorder(genres, Count), y = tmdb_popularity, fill = type)) +
-      geom_bar(stat = "identity") +
-      labs(x = "Genre", y = "tmdb_popularity", title = "Genres and its popularity") +
-      theme_light() + coord_flip()
-  })
-}
-
-# Run the app
-shinyApp(ui = ui, server = server)
-```
-
-
-
 ```{r genre_popularity, echo=FALSE}
 genre_popularity <- titles %>%
   mutate(genres = str_remove_all(genres, "'")) %>% 
@@ -750,142 +735,9 @@ ggplot(genre_popularity, aes(x = reorder(genres, Count), y = tmdb_popularity, fi
   theme_light()+coord_flip()
 ```
 
-# Who would've known?!
-![](https://media.tenor.com/VjFrECdBOq8AAAAC/say-what-now-anchorman.gif)
-
 # Last but not least, let us look at the Number of movies and TV shows by country 
 
 Unfortunately, because HBO only got their movies and shows from 99 countries, there are some uncolored countries 
-
-```{r (unused) (shiny)countries, echo=FALSE}
-## Defining UI
-#  ui = fluidPage(
-#    sidebarLayout(
-#      sidebarPanel(
-#        selectInput("type" , "Select type:" , c("Movies", "Tv Shows")),
-#        sliderInput("range", "Select range of values: ", min= 0, max = 2000, value = c(0,500), #  step =50)
-#      ),
-#      mainPanel(
-#        plotOutput("map")
-#      )
-#    )
-#  )
-#  
-#  
-#  server = function(input,output) {
-#  
-#  
-#  countries = titles %>%
-#    mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
-#    mutate(production_countries = gsub("\\[", "", production_countries)) %>% 
-#    mutate(production_countries = gsub("\\]", "", production_countries)) %>% 
-#    separate_rows(production_countries, sep = ", ") %>%
-#    group_by(production_countries, type) %>%
-#    summarize(total = n()) %>%
-#    arrange(desc(total))
-#  
-#  ## Removing rows that has country unknown
-#  countries = filter(countries, !is.na(production_countries) & production_countries != "") 
-#  
-#  ## Creating a new column that represents the full country name of production countries
-#  countries$full_country_name <- countrycode(sourcevar = countries$production_countries, #  origin = "iso2c", destination= "country.name")
-#  
-#  
-#  # Renaming "United States" to "USA" to match with data in world_map
-#  countries <- countries %>% 
-#    mutate(full_country_name = if_else(full_country_name == "United States", "USA", #  full_country_name))
-#  
-#  ## We're going to try to show this data using a world map
-#  world_map = map_data("world")
-#    
-#  
-#  ## Let's join our world map and our countries data
-#  world_map_data= full_join(world_map, countries, by = c("region" = "full_country_name"))
-#  
-#  ## Plotting
-#  output$map = renderPlot( 
-#    {ggplot(world_map_data, aes(x = long, y = lat, group = group, fill = total)) +
-#    geom_polygon() +
-#    coord_equal() +
-#    scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = #  "darkblue", midpoint = 900) +
-#    labs(title = "Number of movies and TV shows by country", fill = "Count") + 
-#    theme_bw()
-#    } )
-#  }
-#  
-#  
-#  shinyApp(ui= ui, server = server)
-
-```
-
-```{r (shiny)countries, echo=FALSE}
-countries <- titles %>%
-  mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
-  mutate(production_countries = gsub("\\[", "", production_countries)) %>% 
-  mutate(production_countries = gsub("\\]", "", production_countries)) %>% 
-  separate_rows(production_countries, sep = ", ") %>%
-  group_by(production_countries, type) %>%
-  summarize(total = n()) %>%
-  arrange(desc(total))
-
-# Remove rows that have country unknown
-countries <- filter(countries, !is.na(production_countries) & production_countries != "") 
-
-# Create a new column that represents the full country name of production countries
-countries$full_country_name <- countrycode(sourcevar = countries$production_countries, origin = "iso2c", destination= "country.name")
-
-# Rename "United States" to "USA" to match with data in world_map
-countries <- countries %>% 
-  mutate(full_country_name = if_else(full_country_name == "United States", "USA", full_country_name))
-
-# We're going to try to show this data using a world map
-world_map <- map_data("world")
-
-# Let's join our world map and our countries data
-world_map_data <- full_join(world_map, countries, by = c("region" = "full_country_name"))
-
-# Define UI
-ui <- fluidPage(
-  titlePanel("Number of movies and TV shows by country"),
-  sidebarLayout(
-    sidebarPanel(
-      selectInput("type", "Select type", choices = unique(countries$type), selected = "movie"),
-      sliderInput("total", "Select total", min = 0, max = 1824, value = c(0, 1000))
-    ),
-    mainPanel(
-      plotOutput("map", height = "500px", width = "800")
-    )
-  )
-)
-
-# Define server
-server <- function(input, output) {
-  # Filter data based on user input
-  filtered_data <- reactive({
-    world_map_data %>%
-      filter(type == input$type, total >= input$total[1], total <= input$total[2])
-  })
-  
-  # Render map
-  output$map <- renderPlot({
-    ggplot(filtered_data(), aes(x = long, y = lat, group = group, fill = total)) +
-      geom_polygon(aes(fill = total), color = "black",size = 0.01) +
-      coord_equal() +
-      scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = "darkblue", midpoint = 900) +
-      labs(fill = "Count") +
-      theme_light()
-  })
-}
-
-# Run app
-shinyApp(ui, server)
-```
-
-
-
-
-
-
 ```{r countries, echo=FALSE}
 countries = titles %>%
   mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
@@ -904,13 +756,6 @@ countries$full_country_name <- countrycode(sourcevar = countries$production_coun
 
 
 
-
-kable(countries,
-      align = "c",
-      caption = "<b><center>Number of movies and TV shows by country",
-      format = "html")%>% 
-    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
-
 # Renaming "United States" to "USA" to match with data in world_map
 countries <- countries %>% 
   mutate(full_country_name = if_else(full_country_name == "United States", "USA", full_country_name))
@@ -927,11 +772,23 @@ world_map_data= full_join(world_map, countries, by = c("region" = "full_country_
   ggplot(world_map_data, aes(x = long, y = lat, group = group, fill = total)) +
   geom_polygon() +
   coord_equal() +
-  scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = "darkblue", midpoint = 900) +
+  scale_fill_gradient2(limits = c(0, 1824), low = "orchid", mid = "darkorchid", high = "darkmagenta", midpoint = 900) +
   labs(title = "Number of movies and TV shows by country", fill = "Count") + 
   theme_bw()
  
 ```
+
+## Here’s the summary table of what the map shows
+
+```{r countries table, echo=FALSE}
+kable(countries %>% pivot_wider(names_from = type, values_from = total),
+      align = "c",
+      caption = "<b><center>Number of movies and TV shows by country",
+      format = "html")%>% 
+    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+```
+
+
 
 # Final Summary
 
