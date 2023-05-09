@@ -344,7 +344,7 @@ kable(credits %>%
 
 ```
 
-## Since actors and directors can have multiple projects, lets remove the duplicates
+#### Since actors and directors can have multiple projects, lets remove the duplicates
 
 ```{r removing duplicates, echo=FALSE}
 ## Checking how many unique entries in name column
@@ -399,6 +399,30 @@ directors_most_project = directors_projects_per_person %>%
 kable(head(directors_most_project,align = "c", caption= "Directors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
+
+Sadly, I also don't recognize any of these actors. 
+
+### Let's see what Grey DeLisle is involved in as the actor with the most projects...
+
+```{r}
+DeLisle_projects = both_data %>%
+  filter(name == "Grey DeLisle") %>%
+  select(name, title, release_year, type, role, character )
+
+kable(head(DeLisle_projects,align = "c", caption= "Actors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+```
+OH! So they are a Voice Actor? Super interesting...
+
+### What about Charlie Chaplin as the Director with the most projects? 
+
+```{r}
+Chaplin_projects = both_data %>%
+  filter(name == "Charlie Chaplin") %>%
+  select(name, title, release_year, type, role)
+
+kable(head(Chaplin_projects,align = "c", caption= "Actors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+```
+Whoa! So not only was Charlie Chaplin a Director, but also an Actor for these projects too? 
 
 ##  Which actors and directors are among the highiest-rated scores based on an average of IMDB and TMDB scores
 
