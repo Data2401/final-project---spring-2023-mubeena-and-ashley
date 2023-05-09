@@ -1,7 +1,7 @@
 ---
 title: "HBO Universe"
 author: "Ashley Wright & Mubeena Wahaj"
-date: "2022-05-09"
+date: "2023-05-09"
 output: 
   rmdformats::readthedown :
     highlight: tango
@@ -167,8 +167,9 @@ kable(head(credits),
 kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
+Unfortunately, I do not recognize ANY of these people. Let's see if we have any better luck with our Titles Data...
 
-## And here's our titles.csv
+## Here's our titles.csv
 ```{r titles, echo = FALSE}
 
 titles <- within(titles, rm(description))
@@ -180,6 +181,9 @@ kable(head(titles),
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
   
 ```
+Okay! I definitely recognize some of those! I mean, I hope a majority of people recognize The Wizard of Oz or Tom and Jerry...
+
+It looks like both the Titles data and Credits data have a common variable... I wonder...
 
 ## What will it look like if we try to combine these data sets?
 
@@ -193,8 +197,8 @@ kable(head(both_data),
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
- 
- Because we have multiple pero
+
+Interesting! It looks like the titles are listed as many times as there are actors/directors associated with it. Because of this...
 
 # Let's begin by determining the number or movies and TV shows we are working with
 
@@ -210,7 +214,7 @@ titles %>%
 
 
 Wow! that's a lot more movies than shows!
- But let's see it visually
+ But let's see it visually...
  
 ```{r MoviesAndShowGraph, echo = FALSE}
 # Create a data frame with counts of movies and shows
@@ -263,7 +267,7 @@ ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
 
 ```
 
-
+We can further see how many more movies there are in each genre than there are shows. We can also see that the drama and comedy categories have the most amount of movies and shows, while western has the least. 
 
 
 # Now, let us see if there's a correlation between age_restriction and genres
@@ -314,7 +318,7 @@ ggplot(new_genre_counts,aes(x=age_certification , y=age_genre_count, fill = genr
 
 ```
 
-Well that did not work as expected. Let's see if a geom_tile graph does the job:
+Ohhh... Pretty, but that did not work as expected. Let's see if a geom_tile graph does the job:
 
 ```{r age_restriction and genres2, echo=FALSE}
 
@@ -328,6 +332,7 @@ ggplot(new_genre_counts, aes(x = age_certification, y = genres, fill = age_genre
   
 
 ```
+Okay, we can see more clearly that there are more R rated Thriller and Drama titles. The only other ratings that have a slightly different color than the rest are PG, PG-13, and TV-MA. 
 
 # Now lets look at our Actor and Director columns in our credits data. 
 
