@@ -22,6 +22,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ![](https://images.squarespace-cdn.com/content/v1/52adf1abe4b0dbce9d210136/1616077888683-9Y12NX95XXTK11IESZCE/HBO+Maz+-+JL+ZS+GIF.gif?format=1500w)
 </center>
 
+
 For our final project, we're going to take a deep dive into the world of HBO movies and TV shows.
 HBO has been providing quality content to its viewers for decades, but have you ever been stuck on what to watch? By analyzing ratings, popularity, and your favorite actors/actresses, lets take a look at what HBO can offer to its loyal fans.
 
@@ -50,10 +51,7 @@ HBO has been providing quality content to its viewers for decades, but have you 
 # Installing packages
 
 ```{r installing}
-
-
 # install.packages("rmarkdown")
-
 
 #load tidyverse to manipulate data
 #load ggplot2 for graphing
@@ -65,7 +63,6 @@ HBO has been providing quality content to its viewers for decades, but have you 
 
 library(rmarkdown)  ## used for our output theme 'readthedown'
 #render("mydocument.Rmd")
-
 library(tidyverse)
 library(ggplot2)
 library(shiny)
@@ -75,13 +72,6 @@ library(knitr)
 library(kableExtra)
 library(maps)
 
-
-## load ggrepel to use tooltip
-## load ggiraph to use geom_tooltip
-## load ggiraphExtra
-## library(ggrepel)
-## library(ggiraph)  
-## library(ggiraphExtra
 
 ```
 
@@ -334,7 +324,6 @@ ggplot(new_genre_counts, aes(x = age_certification, y = genres, fill = age_genre
 ```
 
 ##  It would be interesting to see what titles are in those “unexpected” combos.
-## Let's see some movie titles that are rated NC-17 but dealing with horror genres
 
 ```{r “unexpected” combos, echo=FALSE}
 
@@ -346,17 +335,44 @@ age_titles = titles %>%
   group_by(genres,age_certification, title, type) %>%                
   summarize(age_genre_count = n())
 
-age_titles %>%
-  filter(genres == "history" & age_certification == "NC-17") 
 
-age_titles %>%
-  filter(genres == "family" & age_certification == "TV-MA") 
+kable((age_titles) %>%
+  filter(genres == "history" & age_certification == "NC-17")  ,
+      align = "c",
+      caption = "<b><center> Let's look at history with NC-17 ",
+      format = "html") %>% 
+      kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
-age_titles %>%
-  filter(genres == "family" & age_certification == "PG-13") 
 
-age_titles %>% filter(genres == "horror" & (age_certification == "G" | age_certification == "TV-G"))
+kable((age_titles) %>%
+  filter(genres == "family" & age_certification == "TV-MA")  ,
+      align = "c",
+      caption = "<b><center> Let's look at family with TV-MA",
+      format = "html") %>% 
+      kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+
+
+kable((age_titles) %>%
+  filter(genres == "family" & age_certification == "PG-13")   ,
+      align = "c",
+      caption = "<b><center> Let's look at family with PG-13",
+      format = "html") %>% 
+      kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+
+kable((age_titles) %>%
+  filter(genres == "horror" & (age_certification == "G" | age_certification == "TV-G"))   ,
+      align = "c",
+      caption = "<b><center>Let's look at horror with G and TV-G ",
+      format = "html") %>% 
+      kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+
 ```
+
+
+
+
+
+
 
 # Now lets look at our Actor and Director columns in our credits data. 
 
@@ -740,7 +756,7 @@ kable(head(titles %>%
 ```
 
 # Ever wonder if your most favourite genre happens to be the most popular genre on HBO?
-## Let's find out 
+
 Here's genre vs popularity graph based on movies and shows
 
 
@@ -764,9 +780,12 @@ ggplot(genre_popularity, aes(x = reorder(genres, Count), y = tmdb_popularity, fi
   theme_light()+coord_flip()
 ```
 
+From the graph, we can see that drama are the most popular in both movies and shows
+
 # Last but not least, let us look at the Number of movies and TV shows by country 
 
 Unfortunately, because HBO only got their movies and shows from 99 countries, there are some uncolored countries 
+
 ```{r countries, echo=FALSE}
 
 ## creating new data named countries grouped by production_countries and type
