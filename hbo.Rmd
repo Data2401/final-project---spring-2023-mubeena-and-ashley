@@ -210,7 +210,7 @@ title_counts = data.frame(
 
 # Create the bar chart
 ggplot(title_counts, aes(x = type, y = Count, fill = type)) +
-  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity") +geom_text(aes(label = Count ))+ ## We have learnt this line of code from Max. this displays the count on each bar
   ggtitle("Number of Movies and Shows") +
   xlab("") +
   ylab("Count")
