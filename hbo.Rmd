@@ -3,13 +3,13 @@ title: "HBO Universe"
 author: "Ashley Wright & Mubeena Wahaj"
 date: "2022-05-09"
 output: 
-  html_document: 
-    highlight: kate
-    theme: cosmo
+  rmdformats::readthedown :
+    highlight: tango
 ##runtime: shiny
 editor_options: 
   chunk_output_type: inline
 ---
+
 
 
 ```{r setup, include=FALSE}
@@ -18,10 +18,11 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 
 # Lights, camera, action!
+<center>
+![](https://images.squarespace-cdn.com/content/v1/52adf1abe4b0dbce9d210136/1616077888683-9Y12NX95XXTK11IESZCE/HBO+Maz+-+JL+ZS+GIF.gif?format=1500w)
+</center>
 
-![](https://images.squarespace-cdn.com/content/v1/52adf1abe4b0dbce9d210136/1616077888683-9Y12NX95XXTK11IESZCE/HBO+Maz+-+JL+ZS+GIF.gif?format=1500w)<centered>
-
-Today, we're going to take a deep dive into the world of HBO movies and TV shows.
+For our final project, we're going to take a deep dive into the world of HBO movies and TV shows.
 HBO has been providing quality content to its viewers for decades, but have you ever been stuck on what to watch? By analyzing ratings, popularity, and your favorite actors/actresses, lets take a look at what HBO can offer to its loyal fans.
 
 # What we will be looking into?
@@ -49,6 +50,7 @@ HBO has been providing quality content to its viewers for decades, but have you 
 # Installing packages
 
 ```{r installing}
+# install.packages("rmarkdown")
 
 #load tidyverse to manipulate data
 #load ggplot2 for graphing
@@ -58,7 +60,8 @@ HBO has been providing quality content to its viewers for decades, but have you 
 #load kableExtra to add features to table
 #load maps for map graph
 
-
+library(rmarkdown)  ## used for our output theme 'readthedown'
+#render("mydocument.Rmd")
 library(tidyverse)
 library(ggplot2)
 library(shiny)
@@ -68,13 +71,18 @@ library(knitr)
 library(kableExtra)
 library(maps)
 
+
 ```
 
 # About Our Data
 
-The data we've decided to work on is from kaggle and is owned by Diego Enrique and here's the link:
+The dataset we have chosen to work with is sourced from Kaggle and is the property of Diego Enrique. Here is the link to access it: 
 <https://www.kaggle.com/datasets/dgoenrique/hbo-max-movies-and-tv-shows>
-Our data consists of 2 csv's:
+
+Additionally, we would like to provide the link for rmdformats  library used for the 'readthedown' output theme used in our project, which was created by Julien Barnier. Here's the link to the theme:
+<https://mran.microsoft.com/snapshot/2019-12-15/web/packages/rmdformats/vignettes/introduction.html>
+
+## Our data consists of 2 csv's:
 
 ## Titles data:
 
@@ -137,7 +145,7 @@ titles = read.csv("titles.csv", stringsAsFactors = FALSE)
 
 #### We're using the kable and head function to show a part of the data sets we're working on but in an organized manner
 
-### Here's our credits.csv
+## Here's our credits.csv
 
 ```{r credits, echo = FALSE}
 
@@ -149,7 +157,7 @@ kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
 
-### And here's our titles.csv
+## And here's our titles.csv
 ```{r titles, echo = FALSE}
 
 titles <- within(titles, rm(description))
@@ -162,10 +170,10 @@ kable(head(titles),
   
 ```
 
-### What will it look like if we try to combine these data sets?
+## What will it look like if we try to combine these data sets?
 
 ```{r combined}
-both_data <- inner_join(titles, credits, by = "id")
+both_data <- left_join(titles, credits, by = "id")
 
 kable(head(both_data),
       align = "c",
@@ -182,7 +190,7 @@ kable(head(both_data),
 ```{r MoviesAndShow, echo = FALSE}
 titles %>% 
   count(type) %>%  
-  kable(format = "markdown", col.names = c("Type", "Count")) %>% 
+  kable(format = "markdown",align = "c", col.names = c("Type", "Count")) %>% 
   kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ## kable_styling() creates a nicely formatted table
@@ -247,7 +255,7 @@ ggplot(genre_counts, aes(x = reorder(genres, Count), y = Count, fill = type)) +
 
 
 
-## Now, let us see if there's a correlation between age_restriction and genres
+# Now, let us see if there's a correlation between age_restriction and genres
 ```{r age_restriction and genres, echo=FALSE}
 
 ## Let's look at how many kinds of age certification are we dealing with
@@ -302,7 +310,7 @@ Well that did not work as expected. Let's see if a geom_tile graph does the job:
 ggplot(new_genre_counts, aes(x = age_certification, y = genres, fill = age_genre_count)) +
   geom_tile(color= "white") +
   labs(x = "Age Certification", y = "Genres", title = "Age Certification and Genres") +
-  scale_fill_gradient(low = "violet", high = "purple") +
+  scale_fill_gradient(low = "slateblue1", high = "mediumorchid3") +
   theme_grey()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   guides(fill = guide_colorbar(title = "Number of Titles", barwidth = 1, barheight = 4))
@@ -334,9 +342,9 @@ unique_directors =  credits %>%
   select(name) %>%
   summarize(unique_names_of_directors = n_distinct(name))
 
-kable(unique_actors, caption = "Unique name for actors") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+kable(unique_actors, align = "c",caption = "Unique name for actors") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
-kable(unique_directors, caption = "Unique name for directors") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+kable(unique_directors, align = "c",caption = "Unique name for directors") %>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
 
@@ -357,7 +365,7 @@ actor_most_project = actors_projects_per_person %>%  group_by(person_id, name, r
 
 
 
-kable(head(actor_most_project, caption= "Actors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+kable(head(actor_most_project,align = "c", caption= "Actors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 #DIRECTORS
 directors_projects_per_person = credits %>%  
@@ -372,11 +380,11 @@ directors_most_project = directors_projects_per_person %>%
   summarize(total_projects = sum(num_projects)) %>% 
   arrange(desc(total_projects))
 
-kable(head(directors_most_project, caption= "Directors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+kable(head(directors_most_project,align = "c", caption= "Directors with most projects"))%>% kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 
 ```
 
-# Which actors and directors are among the highiest-rated scores based on an average of IMDB and TMDB scores
+##  Which actors and directors are among the highiest-rated scores based on an average of IMDB and TMDB scores
 
 ```{r Actors/Directors highiest-rated titles, echo=FALSE}
 both_data <- inner_join(titles, credits, by = "id")
@@ -401,15 +409,15 @@ kable( highiest_rated, align = "c",
 
 # plot number of titles by year and type
 ggplot(titles , aes(x = release_year, fill = type)) +
-  geom_bar(color ="grey", size = .1) +
+  geom_bar(color ="white", size = .1) +
   labs(x = "Release Year", y = "Number of Titles", title = "Number of Shows and Movies Available by Year") +
-  scale_fill_manual(values = c("SHOW" = "blue", "MOVIE" = "red")) +
+  #scale_fill_manual(values = c("SHOW" = "blue", "MOVIE" = "red")) +
   scale_x_continuous(breaks = seq(1900, 2020, by = 10), labels = paste0(seq(1900, 2020, by = 10), "s")) +
   theme(plot.title = element_text(hjust = 0.5))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
 
 ```
 
-Here's the summary table of what the graph shows
+## Here's the summary table of what the graph shows
 
 ```{r decade summary, echo =FALSE}
 ## creating a new column in our titles.csv called decades: this will categorize what release year as per their decades
@@ -420,16 +428,23 @@ titles$decade = cut(titles$release_year,
 
 summary_table = titles %>% 
   group_by(type, decade) %>% 
-  summarise(count = n()) %>% pivot_wider(names_from = type, values_from = count)
+  summarise(count = n()) #%>% pivot_wider(names_from = type, values_from = count)
 
 
-kable(summary_table)
+#kable(summary_table)
 
+kable(summary_table %>% pivot_wider(names_from = type, values_from = count),
+      align = "c",
+      caption = "<b><center>Number of Shows and Movies Available by Year",
+      format = "html")%>% 
+    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
 ```
 
 This indicates us that HBO primarily features Movies and Shows from the decade of 2010s
 
-You can see there is a wide range of movies and TV shows, especially what year they were released. I wonder what the  oldest movies and shows are?
+You can see there is a wide range of movies and TV shows, especially what year they were released. 
+
+## I wonder what the  oldest movies and shows are?
 
 ```{r oldest movies and shows , echo = FALSE}
 
@@ -629,7 +644,7 @@ ggplot(movies_runtime, aes(x=runtime , y= average_score)) +
 
 ```
 
-Since we're looking at runtimes, lets see what's HBO's shortest movie and show and the longest movie and show
+## Since we're looking at runtimes, lets see what's HBO's shortest movie and show and the longest movie and show
 
 ```{r types of runtimes table, echo=FALSE}
 ## shortest movie
@@ -730,13 +745,6 @@ countries$full_country_name <- countrycode(sourcevar = countries$production_coun
 
 
 
-
-kable(countries %>% pivot_wider(names_from = type, values_from = total),
-      align = "c",
-      caption = "<b><center>Number of movies and TV shows by country",
-      format = "html")%>% 
-    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
-
 # Renaming "United States" to "USA" to match with data in world_map
 countries <- countries %>% 
   mutate(full_country_name = if_else(full_country_name == "United States", "USA", full_country_name))
@@ -753,11 +761,23 @@ world_map_data= full_join(world_map, countries, by = c("region" = "full_country_
   ggplot(world_map_data, aes(x = long, y = lat, group = group, fill = total)) +
   geom_polygon() +
   coord_equal() +
-  scale_fill_gradient2(limits = c(0, 1824), low = "lightblue", mid = "blue", high = "darkblue", midpoint = 900) +
+  scale_fill_gradient2(limits = c(0, 1824), low = "orchid", mid = "darkorchid", high = "darkmagenta", midpoint = 900) +
   labs(title = "Number of movies and TV shows by country", fill = "Count") + 
   theme_bw()
  
 ```
+
+## Here’s the summary table of what the map shows
+
+```{r countries table, echo=FALSE}
+kable(countries %>% pivot_wider(names_from = type, values_from = total),
+      align = "c",
+      caption = "<b><center>Number of movies and TV shows by country",
+      format = "html")%>% 
+    kable_styling(bootstrap_options = "bordered", full_width = FALSE)
+```
+
+
 
 # Final Summary
 
