@@ -210,7 +210,7 @@ title_counts = data.frame(
 
 # Create the bar chart
 ggplot(title_counts, aes(x = type, y = Count, fill = type)) +
-  geom_bar(stat = "identity") +geom_text(aes(label = Count ))+ ## We have learnt this line of code from Max. this displays the count on each bar
+  geom_bar(stat = "identity") + geom_text(aes(label = Count ))+ ## We have learnt this line of code from Max. this displays the count on each bar
   ggtitle("Number of Movies and Shows") +
   xlab("") +
   ylab("Count")
@@ -303,7 +303,11 @@ ggplot(new_genre_counts,aes(x=age_certification , y=age_genre_count, fill = genr
 
 ```
 
-Well that did not work as expected. Let's see if a geom_tile graph does the job:
+
+
+
+
+
 
 ```{r age_restriction and genres2, echo=FALSE}
 
@@ -316,6 +320,31 @@ ggplot(new_genre_counts, aes(x = age_certification, y = genres, fill = age_genre
   guides(fill = guide_colorbar(title = "Number of Titles", barwidth = 1, barheight = 4))
   
 
+```
+
+##  It would be interesting to see what titles are in those “unexpected” combos.
+## Let's see some movie titles that are rated NC-17 but dealing with horror genres
+
+```{r “unexpected” combos, echo=FALSE}
+
+age_titles = titles %>%
+  mutate(genres = str_remove_all(genres, "'")) %>%                             
+  mutate(genres = gsub("\\[", "", genres)) %>% 
+  mutate(genres = gsub("\\]", "", genres)) %>% 
+  separate_rows(genres, sep = ", ") %>%     
+  group_by(genres,age_certification, title, type) %>%                
+  summarize(age_genre_count = n())
+
+age_titles %>%
+  filter(genres == "history" & age_certification == "NC-17") 
+
+age_titles %>%
+  filter(genres == "family" & age_certification == "TV-MA") 
+
+age_titles %>%
+  filter(genres == "family" & age_certification == "PG-13") 
+
+age_titles %>% filter(genres == "horror" & (age_certification == "G" | age_certification == "TV-G"))
 ```
 
 # Now lets look at our Actor and Director columns in our credits data. 
@@ -728,6 +757,8 @@ ggplot(genre_popularity, aes(x = reorder(genres, Count), y = tmdb_popularity, fi
 
 Unfortunately, because HBO only got their movies and shows from 99 countries, there are some uncolored countries 
 ```{r countries, echo=FALSE}
+
+## creating new data named countries grouped by production_countries and type
 countries = titles %>%
   mutate(production_countries = str_remove_all(production_countries, "'")) %>% 
   mutate(production_countries = gsub("\\[", "", production_countries)) %>% 
@@ -770,6 +801,7 @@ world_map_data= full_join(world_map, countries, by = c("region" = "full_country_
 ## Here’s the summary table of what the map shows
 
 ```{r countries table, echo=FALSE}
+
 kable(countries %>% pivot_wider(names_from = type, values_from = total),
       align = "c",
       caption = "<b><center>Number of movies and TV shows by country",
