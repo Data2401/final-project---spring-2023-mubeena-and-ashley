@@ -50,7 +50,10 @@ HBO has been providing quality content to its viewers for decades, but have you 
 # Installing packages
 
 ```{r installing}
+
+
 # install.packages("rmarkdown")
+
 
 #load tidyverse to manipulate data
 #load ggplot2 for graphing
@@ -62,6 +65,7 @@ HBO has been providing quality content to its viewers for decades, but have you 
 
 library(rmarkdown)  ## used for our output theme 'readthedown'
 #render("mydocument.Rmd")
+
 library(tidyverse)
 library(ggplot2)
 library(shiny)
@@ -71,6 +75,13 @@ library(knitr)
 library(kableExtra)
 library(maps)
 
+
+## load ggrepel to use tooltip
+## load ggiraph to use geom_tooltip
+## load ggiraphExtra
+## library(ggrepel)
+## library(ggiraph)  
+## library(ggiraphExtra
 
 ```
 
